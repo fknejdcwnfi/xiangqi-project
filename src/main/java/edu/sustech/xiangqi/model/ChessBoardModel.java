@@ -30,6 +30,8 @@ public class ChessBoardModel {
         pieces.add(new ShiPiece("士", 0, 5, false));
         pieces.add(new XiangPiece("象", 0, 2, false));
         pieces.add(new XiangPiece("象", 0, 6, false));
+        pieces.add(new PaoPiece("炮", 2, 1, false));
+        pieces.add(new PaoPiece("炮", 2, 7, false));
 
 
         // 红方棋子
@@ -47,6 +49,8 @@ public class ChessBoardModel {
         pieces.add(new ShiPiece("仕", 9, 5, true));
         pieces.add(new XiangPiece("相", 9, 2, true));
         pieces.add(new XiangPiece("相", 9, 6, true));
+        pieces.add(new PaoPiece("炮", 7, 1, true));
+        pieces.add(new PaoPiece("炮", 7, 7, true));
     }
 
     public List<AbstractPiece> getPieces() {
@@ -66,12 +70,12 @@ public class ChessBoardModel {
         return row >= 0 && row < ROWS && col >= 0 && col < COLS;
     }
 
-    public boolean movePiece(AbstractPiece piece, int newRow, int newCol) {
+    public boolean movePiece(AbstractPiece piece, int newRow, int newCol) {//指AbstractPiece piece当前的棋子对象
         if (!isValidPosition(newRow, newCol)) {
             return false;
         }
 
-        if (!piece.canMoveTo(newRow, newCol, this)) {
+        if (!piece.canMoveTo(newRow, newCol, this)) {//这里的this指当前调用该方法的对象‌，即‌调用 movePiece 方法的棋盘对象
             return false;
         }
 
@@ -85,5 +89,9 @@ public class ChessBoardModel {
 
     public static int getCols() {
         return COLS;
+    }
+
+    public void remove(AbstractPiece getTargetPiece){
+        pieces.remove(getTargetPiece);
     }
 }

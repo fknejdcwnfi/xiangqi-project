@@ -16,19 +16,30 @@ public class HousePiece extends AbstractPiece {
         int rowDiff = targetRow - currentRow;
         int colDiff = Math.abs(targetCol - currentCol);
 
+            if (Math.abs(rowDiff) == 2 &&  Math.abs(colDiff) == 1 ||  Math.abs(rowDiff) == 1 &&  Math.abs(colDiff) == 2) {
+                int modelRow = getRow();//压马脚
+                int modelCol = getCol();
+                if (((rowDiff == -2 && colDiff == -1) && (model.getPieceAt(modelRow-1,modelCol) != null)) || ((rowDiff == -2 && colDiff == 1) && (model.getPieceAt(modelRow-1,modelCol) != null))) {
+                    return false;
+                } else {
+                    if (((rowDiff == 2 && colDiff == 1) && (model.getPieceAt(modelRow+1,modelCol) != null)) || ((rowDiff == 2 && colDiff == -1) && (model.getPieceAt(modelRow+1,modelCol) != null))) {
+                        return false;
+                    }  else {
+                        if (((rowDiff == -1 && colDiff == 2) && (model.getPieceAt(modelRow,modelCol + 1) != null)) || ((rowDiff == 1 && colDiff == 2) && (model.getPieceAt(modelRow,modelCol + 1) != null))) {
+                            return false;
+                        }else {
+                            if (((rowDiff == -1 && colDiff == -2) && (model.getPieceAt(modelRow,modelCol - 1) != null)) || ((rowDiff == 1 && colDiff == -2) && (model.getPieceAt(modelRow,modelCol - 1) != null))) {
+                                return false;
+                            } else {
+                                return true;
+                            }
+                        }
+                    }
+                }
 
-        if (isRed()) {
-            if (Math.abs(rowDiff) == 2 &&  Math.abs(colDiff) == 1 ||  Math.abs(rowDiff) == 1 &&  Math.abs(colDiff) == 2) {
-                return true;
             } else {
                 return false;
             }
-        } else {
-            if (Math.abs(rowDiff) == 2 &&  Math.abs(colDiff) == 1 ||  Math.abs(rowDiff) == 1 &&  Math.abs(colDiff) == 2) {
-                return true;
-            } else {
-                return false;
-            }
-        }
+
     }
 }

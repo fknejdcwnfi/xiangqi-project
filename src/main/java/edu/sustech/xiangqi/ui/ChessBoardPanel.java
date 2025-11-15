@@ -48,16 +48,27 @@ public class ChessBoardPanel extends JPanel {
         int col = Math.round((float)(x - MARGIN) / CELL_SIZE);
         int row = Math.round((float)(y - MARGIN) / CELL_SIZE);
 
-        if (!model.isValidPosition(row, col)) {
+        //详细看看！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+        if (!model.isValidPosition(row, col)) {//model 是‌棋盘模型对象‌
             return;
         }
 
-        if (selectedPiece == null) {
+        if (selectedPiece == null) {//selectedPiece是指我当前选中的棋子
             selectedPiece = model.getPieceAt(row, col);
         } else {
-            if(model.getPieceAt(row, col) != null) return; //由其子则不动
-            model.movePiece(selectedPiece, row, col);
-            selectedPiece = null;
+            if(model.getPieceAt(row, col) != null) { //这里有很多问题，第一个是阵营的问题，第二个是吃后不能移动的问题，第三个是不同的棋子独自的吃法和做法问题
+                if (model.getPieceAt(row, col).isRed() == selectedPiece.isRed() ) return;
+                else {
+                    model.remove(model.getPieceAt(row, col));
+                    model.movePiece(selectedPiece, row, col);
+                    selectedPiece = null;
+                }
+            } else {
+                if(model.getPieceAt(row, col) == null) {
+                    model.movePiece(selectedPiece, row, col);
+                    selectedPiece = null;
+                }
+            }
         }
 
         // 处理完点击事件后，需要重新绘制ui界面才能让界面上的棋子“移动”起来

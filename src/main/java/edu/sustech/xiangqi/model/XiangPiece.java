@@ -16,19 +16,24 @@ public class XiangPiece extends AbstractPiece{
 
         int rowDiff = targetRow - currentRow;
         int colDiff = Math.abs(targetCol - currentCol);
+        int inColDiff = targetCol - currentCol;
 
         //象的移动（1.分黑白 2.不过楚河汉界 3.斜线的田字）
-        if (isRed()) {
-                    if ((Math.abs(rowDiff) == 2 && Math.abs(colDiff) == 2) && targetRow >= 5) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else if ((Math.abs(rowDiff) == 2 && Math.abs(colDiff) == 2) && targetRow <= 4) {
-                    return true;
-                } else{
-                    return false;
-                }
+        // 1. 象必须走田字
+        if (Math.abs(rowDiff) != 2 || Math.abs(colDiff) != 2) {
+            return false;
+        }
 
+        // 2. 象不能过河
+        if (isRed() && targetRow < 5) return false;
+        if (!isRed() && targetRow > 4) return false;
+
+        // 3. 判断象眼
+        int eyeRow = getRow() + rowDiff / 2;
+        int eyeCol = getCol() + inColDiff / 2;
+        if (model.getPieceAt(eyeRow, eyeCol) != null) {
+            return false; // 塞象眼
+        }
+        return true;
     }
 }

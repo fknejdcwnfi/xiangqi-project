@@ -1,9 +1,9 @@
 package edu.sustech.xiangqi.model;
 
-public class CarPiece extends AbstractPiece {
-    public CarPiece(String name, int row, int col, boolean isRed) {
-    super(name, row, col, isRed);
-}
+public class PaoPiece extends AbstractPiece{
+    public PaoPiece(String name, int row, int col, boolean isRed) {
+        super(name, row, col, isRed);
+    }
     @Override
     public boolean canMoveTo(int targetRow, int targetCol, ChessBoardModel model) {
         int currentRow = getRow();
@@ -22,37 +22,37 @@ public class CarPiece extends AbstractPiece {
             if (rowDiff >0 &&  Math.abs(colDiff) ==0) {
                 boolean isNoPiece = true;
 
-                   for (int i = 1; i < rowDiff; i++) {
-                       if (model.getPieceAt(currentRow + i, currentCol) == null) {
-                           continue;
-                       } else {
-                           isNoPiece = false;
-                           break;
-                       }
-                   }
+                for (int i = 1; i < rowDiff; i++) {
+                    if (model.getPieceAt(currentRow + i, currentCol) == null) {
+                        continue;
+                    } else {
+                        isNoPiece = false;
+                        break;
+                    }
+                }
 
-               if (isNoPiece) {
-                   return true;
-               }  else {
-                   return false;
-               }
+                if (isNoPiece) {
+                    return true;
+                }  else {
+                    return false;
+                }
             }
 
             if (rowDiff <0 && Math.abs(colDiff) ==0) {
-            boolean isNoPiece = true;
-            for (int i = -1; i > rowDiff; i--) {
-                if (model.getPieceAt(currentRow + i, currentCol) == null) {
-                    continue;
-                }  else {
-                    isNoPiece = false;
-                    break;
+                boolean isNoPiece = true;
+                for (int i = -1; i > rowDiff; i--) {
+                    if (model.getPieceAt(currentRow + i, currentCol) == null) {
+                        continue;
+                    }  else {
+                        isNoPiece = false;
+                        break;
+                    }
                 }
-            }
-            if (isNoPiece) {
-                return true;
-            }   else {
-                return false;
-            }
+                if (isNoPiece) {
+                    return true;
+                }   else {
+                    return false;
+                }
             }
 
             if (rowDiff == 0 && inColDiff >0) {
@@ -91,6 +91,6 @@ public class CarPiece extends AbstractPiece {
         } else {
             return false;
         }
-        return true;
+          return  true;
     }
 }
