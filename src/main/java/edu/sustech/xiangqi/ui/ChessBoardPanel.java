@@ -61,32 +61,32 @@ public class ChessBoardPanel extends JPanel {
             selectedPiece = model.getPieceAt(row, col);
         } else {//单独写炮的吃子方法
             if (model.getPieceAt(row, col) != null) {
+                AbstractPiece target = model.getPieceAt(row, col);
+                if (target != null) {
+                    // 确保是敌方才允许吃
+                    if (target.isRed() == selectedPiece.isRed()) {
+                        return;
+                    }
+                    // 在目标仍存在时判断吃子是否合法（Pao 的 canMoveTo 会检查“中间恰好有1个”的规则）
                     if (selectedPiece.canMoveTo(row, col, model)) {
-                        if (model.getPieceAt(row, col).isRed() == selectedPiece.isRed()) {
-                            return;
-                        } else {
-                            if (selectedPiece.getName().equals("炮")) {
-                                model.movePieceForce(selectedPiece, row, col);
-                                model.remove(model.getPieceAt(row, col));
-                                //model.movePiece(selectedPiece, row, col);
-                                selectedPiece = null;
-                            } else {
-                                model.remove(model.getPieceAt(row, col));
-                                model.movePiece(selectedPiece, row, col);
-                                selectedPiece = null;
-                            }
-                        }
+                        // 保存 target 引用，先移除目标
+                        model.remove(target);
+                        // 直接强制移动（跳过再次校验，避免因目标已被移除影响逻辑）
+                        model.movePieceForce(selectedPiece, row, col);//？
+                        selectedPiece = null;
                     } else {
                         return;
                     }
-            } else {
-                if (selectedPiece.canMoveTo(row, col, model)) {
-                model.movePiece(selectedPiece, row, col);
-                selectedPiece = null;
+                 }
                 } else {
-                    return;
+                    // 目标为空，走普通移动，使用正常的 movePiece（含校验）
+                    if (selectedPiece.canMoveTo(row, col, model)) {
+                        model.movePiece(selectedPiece, row, col);
+                        selectedPiece = null;
+                    } else {
+                        return;
+                    }
                 }
-            }
         }
 
         // 处理完点击事件后，需要重新绘制ui界面才能让界面上的棋子“移动”起来
