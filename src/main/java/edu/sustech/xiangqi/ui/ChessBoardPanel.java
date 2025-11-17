@@ -44,29 +44,47 @@ public class ChessBoardPanel extends JPanel {
         });
     }
 
+    public ChessBoardModel model() {
+        return model;
+    }
+
     private void handleMouseClick(int x, int y) {
         int col = Math.round((float)(x - MARGIN) / CELL_SIZE);
         int row = Math.round((float)(y - MARGIN) / CELL_SIZE);
 
-        //详细看看！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+        //详细看看
         if (!model.isValidPosition(row, col)) {//model 是‌棋盘模型对象‌
             return;
         }
 
         if (selectedPiece == null) {//selectedPiece是指我当前选中的棋子
             selectedPiece = model.getPieceAt(row, col);
-        } else {
-            if(model.getPieceAt(row, col) != null) { //这里有很多问题，第一个是阵营的问题，第二个是吃后不能移动的问题，第三个是不同的棋子独自的吃法和做法问题
-                if (model.getPieceAt(row, col).isRed() == selectedPiece.isRed() ) return;
-                else {
-                    model.remove(model.getPieceAt(row, col));
-                    model.movePiece(selectedPiece, row, col);
-                    selectedPiece = null;
-                }
+        } else {//单独写炮的吃子方法
+            if (model.getPieceAt(row, col) != null) {
+                    if (selectedPiece.canMoveTo(row, col, model)) {
+                        if (model.getPieceAt(row, col).isRed() == selectedPiece.isRed()) {
+                            return;
+                        } else {
+                            if (selectedPiece.getName().equals("炮")) {
+                                model.movePieceForce(selectedPiece, row, col);
+                                model.remove(model.getPieceAt(row, col));
+                                //model.movePiece(selectedPiece, row, col);
+                                selectedPiece = null;
+                            } else {
+                                model.remove(model.getPieceAt(row, col));
+                                model.movePiece(selectedPiece, row, col);
+                                selectedPiece = null;
+                            }
+                        }
+                    } else {
+                        return;
+                    }
             } else {
-                if(model.getPieceAt(row, col) == null) {
-                    model.movePiece(selectedPiece, row, col);
-                    selectedPiece = null;
+                if (selectedPiece.canMoveTo(row, col, model)) {
+                model.movePiece(selectedPiece, row, col);
+                selectedPiece = null;
+                } else {
+                    return;
                 }
             }
         }

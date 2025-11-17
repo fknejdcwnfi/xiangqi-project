@@ -17,72 +17,12 @@ public class PaoPiece extends AbstractPiece{
         int colDiff = Math.abs(targetCol - currentCol);
         int inColDiff = targetCol - currentCol;
 
-        //移动的方法
+        //炮移动的方法，我这里没有涉及吃子的写法，单纯是写移动的方法。但是现在我尝试结合起来，这样才更简单完成这个代码！
         if ( (Math.abs(rowDiff) !=0 &&  Math.abs(colDiff) ==0) || (Math.abs(rowDiff) ==0 &&  Math.abs(colDiff) !=0)) {
-            if (rowDiff >0 &&  Math.abs(colDiff) ==0) {
-                boolean isNoPiece = true;
-
-                for (int i = 1; i < rowDiff; i++) {
-                    if (model.getPieceAt(currentRow + i, currentCol) == null) {
-                        continue;
-                    } else {
-                        isNoPiece = false;
-                        break;
-                    }
-                }
-
-                if (isNoPiece) {
-                    return true;
-                }  else {
-                    return false;
-                }
-            }
-
-            if (rowDiff <0 && Math.abs(colDiff) ==0) {
-                boolean isNoPiece = true;
-                for (int i = -1; i > rowDiff; i--) {
-                    if (model.getPieceAt(currentRow + i, currentCol) == null) {
-                        continue;
-                    }  else {
-                        isNoPiece = false;
-                        break;
-                    }
-                }
-                if (isNoPiece) {
-                    return true;
-                }   else {
-                    return false;
-                }
-            }
-
-            if (rowDiff == 0 && inColDiff >0) {
-                boolean isNoPiece = true;
-                for (int i = 1; i < inColDiff; i++) {
-                    if (model.getPieceAt(currentRow, currentCol + i) == null) {
-                        continue;
-                    }   else {
-                        isNoPiece = false;
-                        break;
-                    }
-                }
-                if (isNoPiece) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-
-            if (rowDiff == 0 && inColDiff < 0) {
-                boolean isNoPiece = true;
-                for (int i = -1; i > inColDiff; i--) {
-                    if (model.getPieceAt(currentRow, currentCol + i) == null) {
-                        continue;
-                    }    else {
-                        isNoPiece = false;
-                        break;
-                    }
-                }
-                if (isNoPiece) {
+            if (isAPiece(targetRow, targetCol, model) && model.getPieceAt(targetRow, targetCol) != null) {//这里先看看
+                return true;
+            } else {
+                if (isNoPiece(targetRow, targetCol, model) && model.getPieceAt(targetRow, targetCol) == null) {
                     return true;
                 } else {
                     return false;
@@ -91,6 +31,5 @@ public class PaoPiece extends AbstractPiece{
         } else {
             return false;
         }
-          return  true;
     }
 }

@@ -70,15 +70,21 @@ public class ChessBoardModel {
         return row >= 0 && row < ROWS && col >= 0 && col < COLS;
     }
 
+
     public boolean movePiece(AbstractPiece piece, int newRow, int newCol) {//指AbstractPiece piece当前的棋子对象
         if (!isValidPosition(newRow, newCol)) {
             return false;
         }
 
         if (!piece.canMoveTo(newRow, newCol, this)) {//这里的this指当前调用该方法的对象‌，即‌调用 movePiece 方法的棋盘对象
-            return false;
+                return false;
         }
+        piece.moveTo(newRow, newCol);
+        return true;
+    }
 
+    public boolean movePieceForce(AbstractPiece piece, int newRow, int newCol) {
+        if (!isValidPosition(newRow, newCol)) return false;
         piece.moveTo(newRow, newCol);
         return true;
     }
