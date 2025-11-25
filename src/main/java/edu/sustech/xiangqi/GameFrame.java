@@ -13,11 +13,8 @@ public class GameFrame  extends JFrame {
 
     private JButton Startbutton;
     private JButton changeinformation;
-    private JButton Returnbutton;
+    private JButton savaAndOutButton;
     private JButton returntologinbutton;
-    private ChessBoardPanel chessboardpanel;
-
-
 
     public GameFrame() {
 
@@ -40,8 +37,8 @@ public class GameFrame  extends JFrame {
         changeinformation = new JButton("修改信息");
         changeinformation.setPreferredSize(buttonSize); // 设置大小
 
-        Returnbutton = new JButton("菜单退出");
-        Returnbutton.setPreferredSize(buttonSize); // 设置大小
+        savaAndOutButton = new JButton("存档并退出");
+        savaAndOutButton.setPreferredSize(buttonSize); // 设置大小
 
         returntologinbutton = new JButton("返回登录");
         returntologinbutton.setPreferredSize(buttonSize); // 设置大小
@@ -55,7 +52,7 @@ public class GameFrame  extends JFrame {
 
         buttonPanel.add(Startbutton);
         buttonPanel.add(changeinformation);
-        buttonPanel.add(Returnbutton);
+        buttonPanel.add(savaAndOutButton);
         buttonPanel.add(returntologinbutton);
 
         // 4. 侧边容器 (sidePanel) - 关键步骤！
@@ -108,5 +105,9 @@ public class GameFrame  extends JFrame {
 
     public JButton getChangeinformation() {
         return this.changeinformation;
+    }
+
+    public JButton getSavaAndOutButton() {
+        return this.savaAndOutButton;
     }
 }
