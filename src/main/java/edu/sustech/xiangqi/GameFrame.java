@@ -21,28 +21,35 @@ public class GameFrame  extends JFrame {
     private JButton saveAndOutButton;
     private JButton restartButton;
     private JButton takeBackAMove;
+    private boolean isTourist;
 
     public GameFrame(String playerName) {
 
         super("中国象棋");
+        this.isTourist = (playerName == null ||playerName.isEmpty());
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.setLayout(new BorderLayout());
 
-        /// //////////////////////////////////////////////////////////////////////
-        //New Logic : load or craete Session
-        //1. try to load the existing save game
-        activeSession = GamePersistence.loadGame(playerName);
+        //============================================================================
 
-        //if load failed (returns null), create a new session
-        if (activeSession == null) {
-            activeSession = new PlayGameSession(playerName);
-            //if new game ,enable the start button
+        if (isTourist) {
+            activeSession = new PlayGameSession("Tourist");
             Startbutton = new JButton("点击开始");
         } else {
-            //if loaded game ,automatically enable interaction
-            Startbutton = new JButton("游戏中");
-            Startbutton.setEnabled(false);
+            // try to load the existing save game
+            activeSession = GamePersistence.loadGame(playerName);
+
+            //if load failed (returns null), create a new session
+            if (activeSession == null) {
+                activeSession = new PlayGameSession(playerName);
+                //if new game ,enable the start button
+                Startbutton = new JButton("点击开始");
+            } else {
+                //if loaded game ,automatically enable interaction
+                Startbutton = new JButton("游戏中");
+                Startbutton.setEnabled(false);
+            }
         }
 //===============================================================================
 
@@ -51,10 +58,9 @@ public class GameFrame  extends JFrame {
         ChessBoardModel model = activeSession.getChessBoardModel();
         CurrentCamp currentCamp = activeSession.getCurrentCamp();// You'll need to update ChessBoardPanel
         this.boardPanel = new ChessBoardPanel(model, currentCamp);
-
         this.boardPanel.setGameInteractionEnabled(!Startbutton.isEnabled());// Match state of button
-
         this.add(boardPanel, BorderLayout.CENTER);
+
         // 2. 按钮的具体设置
         // 创建一个统一的尺寸，例如：宽 120，高 40 (根据你的喜好调整)
         Dimension buttonSize = new Dimension(120, 40);
@@ -64,7 +70,8 @@ public class GameFrame  extends JFrame {
         changeinformation = new JButton("修改信息");
         changeinformation.setPreferredSize(buttonSize); // 设置大小
 
-        saveAndOutButton = new JButton("存档并退出");
+        String exitText = isTourist ? "退出游戏" : "存档并退出";
+        saveAndOutButton = new JButton(exitText);
         saveAndOutButton.setPreferredSize(buttonSize); // 设置大小
 
         restartButton = new JButton("重新开始");
@@ -73,28 +80,37 @@ public class GameFrame  extends JFrame {
         takeBackAMove = new JButton("悔一下棋");
         takeBackAMove.setPreferredSize(buttonSize);
 
-        // 3. 按钮内部布局 (buttonPanel)
-        // 依然使用 GridLayout 排列4个按钮，但这次只负责排列，不负责拉伸整个页面
+        //==============================================================
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(4, 1, 0, 20)); // 4行1列，垂直间距20
-        // 设置 buttonPanel 的背景色透明或与背景一致，避免出现色差（可选）
-        // buttonPanel.setOpaque(false);
+        //aujust grid rows based on the mode (2 row for tourist ,5 for user)
+        // 按钮内部布局 (buttonPanel)
+        // 依然使用 GridLayout 排列4个按钮，但这次只负责排列，不负责拉伸整个页面
+        int rows = isTourist ? 2 : 5;
+        buttonPanel.setLayout(new GridLayout(rows, 1,0, 20));
+        // row行1列，垂直间距20
+        //key! only add buttons relevant to the user
 
         buttonPanel.add(Startbutton);
-        buttonPanel.add(changeinformation);
-        buttonPanel.add(saveAndOutButton);
-        buttonPanel.add(restartButton);
-        buttonPanel.add(takeBackAMove);
 
-        // 4. 侧边容器 (sidePanel) - 关键步骤！
-        // 我们用一个新面板包裹 buttonPanel，防止它被 BorderLayout 拉伸
-        JPanel sidePanel = new JPanel();
+        if (!isTourist) {
+            buttonPanel.add(changeinformation);
+            buttonPanel.add(takeBackAMove);
+            buttonPanel.add(restartButton);
+        }
+
+        //both all have the button
+        buttonPanel.add(saveAndOutButton);
+
+
+        //侧边容器 (sidePanel)我们用一个新面板包裹 buttonPanel，防止它被 BorderLayout 拉伸
+        JPanel sidePanel =new JPanel();
         // 使用 GridBagLayout，它会让内部组件保持“首选大小”并在垂直方向居中
         sidePanel.setLayout(new GridBagLayout());
         sidePanel.add(buttonPanel);
-
         // 将这个不拉伸的容器放到窗口右侧
         this.add(sidePanel, BorderLayout.EAST);
+        //==========================================================// 将这个不拉伸的容器放到窗口右侧
+
 
         //=============================================================
         Startbutton.addActionListener(new ActionListener() {
@@ -109,8 +125,12 @@ public class GameFrame  extends JFrame {
 
        //save logic
         saveAndOutButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {//why this is what?
+                if (!isTourist) {
                 GamePersistence.saveGame(activeSession);
+                } else {
+                    System.out.println("you are Tourist exit - No save");
+                }
                 dispose();//close the game window
             }
         });
@@ -159,15 +179,8 @@ public class GameFrame  extends JFrame {
         return this.boardPanel;
     }
 
-    public ChessBoardModel getChessBoardModel() {
-        return this.activeSession.getChessBoardModel();
-    }
-
     public JButton getStartbutton() {
         return this.Startbutton;
     }
 
-    public CurrentCamp getCurrentCamp() {
-        return this.activeSession.getCurrentCamp();
-    }
 }

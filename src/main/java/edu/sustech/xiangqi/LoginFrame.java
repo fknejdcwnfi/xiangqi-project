@@ -24,7 +24,6 @@ public class LoginFrame extends JFrame{
     private LoginPanel loginPanel;
     private ChangePasswordFrame changePasswordFrame;
     private SigninFrame signinFrame;
-    private ChessBoardPanel chessBoardPanel;
 
     public LoginFrame() {
         super("中国象棋 - 登录");
@@ -155,6 +154,16 @@ public class LoginFrame extends JFrame{
             }
 
         });
+
+        // 游客登录相关的相应
+        this.loginPanel.getTouristButton().addActionListener(e -> {
+                    this.gameFrame = new GameFrame(null);
+                    gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    gameFrame.pack();
+                    gameFrame.setLocationRelativeTo(null);
+                    gameFrame.setVisible(true);
+                    this.setVisible(false);
+                });
 
 
         //改变密码的相关代码

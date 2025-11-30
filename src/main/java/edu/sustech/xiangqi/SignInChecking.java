@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class SignInChecking {
     public static boolean rightname(String importNickName){
-        if(Objects.equals(importNickName,"")){return false;}
+        if(Objects.equals(importNickName,"") || Objects.equals(importNickName,"null")){return false;}//I have change this for no null Username!
         else if(importNickName.length()>=15){return false;}
         else {
             try {

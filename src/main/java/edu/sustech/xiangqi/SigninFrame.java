@@ -20,6 +20,7 @@ public class SigninFrame extends JFrame {
         super("登录");
         this.setLocationRelativeTo(null);
         this.setSize(500, 500);
+        this.setLayout(null);
         this.setVisible(false);
         returnButton = new JButton("返回");
         returnButton.setFont(new Font("Dialog", Font.BOLD, 16)); // 16磅，粗体

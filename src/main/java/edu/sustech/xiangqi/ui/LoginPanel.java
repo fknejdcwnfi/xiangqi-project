@@ -12,6 +12,7 @@ public class LoginPanel extends JPanel {
     private JLabel unexistLabel;
     private JLabel usernameLabel;
     private JLabel passwordLabel;
+    private JButton touristButton;
 
     public LoginPanel() {
         this.setLayout(null); // 继续使用 null 布局以便于移植
@@ -52,7 +53,7 @@ public class LoginPanel extends JPanel {
         this.add(passwordLabel);
         //
         //开始游玩按键，按了就可以进入页面
-        loginButton = new JButton("开始");
+        loginButton = new JButton("用户登录");
         loginButton.setFont(new Font("Dialog", Font.BOLD, 16)); // 16磅，粗体
         loginButton.setSize(100, 50);
         loginButton.setLocation(150, 350);
@@ -79,10 +80,17 @@ public class LoginPanel extends JPanel {
         signInButton.setSize(100, 50);
         signInButton.setLocation(250, 350);
         this.add(signInButton);
+
+        touristButton = new JButton("游客登录");
+        touristButton.setFont(new Font("Dialog", Font.BOLD, 16)); // 16磅，粗体
+        touristButton.setSize(100, 50);
+        touristButton.setLocation(200, 400);
+        this.add(touristButton);
     }
 
     public JButton getLoginButton() { return loginButton; }
     public JButton getSignInButton() { return signInButton; }
+    public JButton getTouristButton() { return touristButton; }
     public String getUsername() { return usernameField.getText(); }
     public String getPassword() { return passwordField.getText(); }
     public JLabel wrongLabel() { return wrongLabel; }
