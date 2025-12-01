@@ -19,6 +19,7 @@ import static edu.sustech.xiangqi.SignInChecking.rightname;
 
 
 public class LoginFrame extends JFrame{
+    //this is not a Frame but an object which includes the frame and the frame is called through this class so it just looks like a frame but actually not !
 
     private GameFrame gameFrame;
     private LoginPanel loginPanel;
@@ -105,10 +106,12 @@ public class LoginFrame extends JFrame{
                         Nicknamewrite.close();
                         Passwordwrite.close();
 
-                        // 1.2 注册成功，显示提示并设置延时跳转
+                        // 注册成功，显示提示并设置延时跳转
+                        //this text is created but not visible
                         signinFrame.getConfirmsuscess().setText("注册成功！"); // 假设 Confirmsuscess 是成功的提示标签
+
                         // 关键：Timer 的action 将执行跳转
-                        Timer jumpTimer = new Timer(500, new ActionListener() {
+                        Timer jumpTimer = new Timer(500, new ActionListener() {//this is the same to a object and use it on the code below.
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 // --- 延时 0.5 秒后才执行的跳转逻辑 ---
@@ -131,6 +134,7 @@ public class LoginFrame extends JFrame{
                                 ((Timer) e.getSource()).stop();
                             }
                         });
+
                         jumpTimer.setRepeats(false);
                         signinFrame.getConfirmsuscess().setVisible(true); // 立即显示成功提示
                         jumpTimer.start();              // 启动延时跳转
@@ -158,6 +162,7 @@ public class LoginFrame extends JFrame{
         // 游客登录相关的相应
         this.loginPanel.getTouristButton().addActionListener(e -> {
                     this.gameFrame = new GameFrame(null);
+                    this.setupGameFrameListeners();
                     gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     gameFrame.pack();
                     gameFrame.setLocationRelativeTo(null);

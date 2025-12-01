@@ -46,8 +46,8 @@ public class InterChecking {
     }
 
 
-    public static boolean enterpassword(String importUserPassword,int enteruser){//判断对应的密码是否正确
-        if(enteruser<0){
+    public static boolean enterpassword(String importUserPassword,int enteruserIndex){//判断对应的密码是否正确
+        if(enteruserIndex<0){
             return false;
         }
         else{
@@ -65,7 +65,7 @@ public class InterChecking {
                     }
 
                     // 只有有效密码行才进行比对
-                    if (lineCount == enteruser) {
+                    if (lineCount == enteruserIndex) {
                         if (Objects.equals(trimmedPassword, importUserPassword)) {
                             return true; // 密码匹配
                         } else {

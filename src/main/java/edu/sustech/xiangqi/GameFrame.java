@@ -94,12 +94,12 @@ public class GameFrame  extends JFrame {
 
         if (!isTourist) {
             buttonPanel.add(changeinformation);
-            buttonPanel.add(takeBackAMove);
-            buttonPanel.add(restartButton);
         }
 
         //both all have the button
         buttonPanel.add(saveAndOutButton);
+        buttonPanel.add(takeBackAMove);
+        buttonPanel.add(restartButton);
 
 
         //侧边容器 (sidePanel)我们用一个新面板包裹 buttonPanel，防止它被 BorderLayout 拉伸
