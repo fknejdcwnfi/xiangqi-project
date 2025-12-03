@@ -108,7 +108,9 @@ public class ChessBoardPanel extends JPanel {
         if (interactionEnabled) {
             // 游戏开始
             updateTurnLabel();   // 显示 "当前回合：红方"
+            gameFrame.startGameTimer();
         } else {
+            gameFrame.stopGameTimer();
             // 禁用时
             if (this.model.getMoveHistory().isEmpty()) {
             statusLabel.setText("请点击开始");
@@ -301,6 +303,15 @@ public class ChessBoardPanel extends JPanel {
                 // Checkmate: The previous player wins
                 String winner = currentCamp.isRedTurn() ? "黑方" : "红方";
                 message = winner + "胜利！（将军且无路可走）";
+                if (currentCamp.isRedTurn()) {
+                    gameFrame.addBlackCampScore();
+                    gameFrame.updateScoreLabel();
+                    repaint();
+                } else  {
+                    gameFrame.addRedCampScore();
+                    gameFrame.updateScoreLabel();
+                    repaint();
+                }
             } else {
                 // Stalemate: Draw
                 message = "和局！（无路可走但未被将军）";

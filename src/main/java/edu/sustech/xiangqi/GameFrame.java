@@ -6,9 +6,6 @@ import edu.sustech.xiangqi.ui.ChessBoardPanel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 public class GameFrame  extends JFrame {
 
     //  NEW
@@ -25,6 +22,12 @@ public class GameFrame  extends JFrame {
     private JButton endUpPeaceButton;
     private boolean isTourist;
     private String playerName;
+    private JLabel timerLabel;
+    private Timer gameTimer;
+    private int secondsElapsed;
+    private JLabel campGoalLabel;
+    private int redCampScore;
+    private int blackCampScore;
 
     public GameFrame(String playerName) {
 
@@ -66,6 +69,13 @@ public class GameFrame  extends JFrame {
         this.boardPanel.setGameInteractionEnabled(!Startbutton.isEnabled());// Match state of button
         this.add(boardPanel, BorderLayout.CENTER);
 
+        if (isTourist) {
+            this.redCampScore = 0;
+            this.blackCampScore = 0;
+        } else {
+            this.redCampScore = activeSession.getRedCampScore();
+            this.blackCampScore = activeSession.getBlackCampScore();
+        }
 
         // 2. 按钮的具体设置
         // 创建一个统一的尺寸，例如：宽 120，高 40 (根据你的喜好调整)
@@ -127,29 +137,61 @@ public class GameFrame  extends JFrame {
         buttonPanel.add(endUpPeaceButton);
         buttonPanel.add(giveUpButton);
 
+        String playingTime = activeSession.getPlayingTime();
+        int seconds = activeSession.getSecondsElapsed();
+        if (isTourist) {
+            this.timerLabel = new JLabel("游戏时长: 00:00:00", SwingConstants.CENTER);
+            this.timerLabel.setFont(new Font("Dialog", Font.BOLD, 14));
+            this.secondsElapsed = 0; // Initialize to 0 seconds
+             } else if (playingTime == null || playingTime.equals("游戏时长: 00:00:00") || seconds == 0) {
+            this.timerLabel = new JLabel("游戏时长: 00:00:00", SwingConstants.CENTER);
+            this.timerLabel.setFont(new Font("Dialog", Font.BOLD, 14));
+            this.secondsElapsed = 0; // Initialize to 0 seconds
+        } else {
+            this.timerLabel = new JLabel(playingTime, SwingConstants.CENTER);
+            this.timerLabel.setFont(new Font("Dialog", Font.BOLD, 14));
+            this.secondsElapsed = seconds;
+        }
+
+
+        JPanel buttonCenterWrapper = new JPanel(new GridBagLayout());
+        buttonCenterWrapper.add(buttonPanel);
+
+        String goalText = String.format("<html>" +
+                "<span style='color:red;'>红方: %d</span>" +
+                "<span style='color:#666;'>&nbsp;|&nbsp;</span>" + // Separator
+                "<span style='color:black;'>黑方: %d</span>" +
+                "</html>",redCampScore,blackCampScore);
+
+        this.campGoalLabel = new JLabel(goalText, SwingConstants.CENTER);
+        this.campGoalLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+
         //侧边容器 (sidePanel)我们用一个新面板包裹 buttonPanel，防止它被 BorderLayout 拉伸
-        JPanel sidePanel = new JPanel(new GridBagLayout());
-        // 使用 GridBagLayout，它会让内部组件保持“首选大小”并在垂直方向居中
-        GridBagConstraints gbc = new GridBagConstraints();
+        JPanel sidePanel = new JPanel(new BorderLayout());
 
-        // Add the Info Panel (Top)
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weighty = 0; // Do not take up extra vertical space
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(10, 0, 20, 0); // Add 30px gap below the text
-        sidePanel.add(infoPanel, gbc);
+        // A. Create a TOP wrapper for Info, Timer, and Goal (Stacked Vertically)
+        JPanel topInfoContainer = new JPanel();
+        topInfoContainer.setLayout(new BoxLayout(topInfoContainer, BoxLayout.Y_AXIS));
 
-        // Add the Button Panel (Bottom)
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 0, 0); // Reset insets
-        sidePanel.add(buttonPanel, gbc);
+        // Align the nested panels to the center of the X-axis
+        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        campGoalLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // NEW: Align the new label
 
-        // 这个空组件占据了底部所有剩余空间，
-        // 有效地将信息和按钮推送到顶部。
-        gbc.gridy = 2;
-        gbc.weighty = 1.0;
-        sidePanel.add(new JLabel(), gbc);
+        // === Layout Stack in topInfoContainer (NORTH section of sidePanel) ===
+        topInfoContainer.add(Box.createVerticalStrut(20)); // Top margin
+        topInfoContainer.add(infoPanel);                   // 1. Player Name
+        topInfoContainer.add(Box.createVerticalStrut(10)); // Gap
+        topInfoContainer.add(timerLabel);                  // 2. Timer
+        topInfoContainer.add(Box.createVerticalStrut(10)); // NEW: Gap
+        topInfoContainer.add(campGoalLabel);               // NEW: 3. Camp Goals
+        topInfoContainer.add(Box.createVerticalStrut(30)); // Gap before buttons
+
+        // B. Put Info/Timer at the TOP (NORTH)
+        sidePanel.add(topInfoContainer, BorderLayout.NORTH);
+
+        // C. Put Buttons in the CENTER (Occupying the rest of the space)
+        sidePanel.add(buttonCenterWrapper, BorderLayout.CENTER);
         this.add(sidePanel, BorderLayout.EAST);
 
         // 自动调整窗口大小
@@ -231,5 +273,71 @@ public class GameFrame  extends JFrame {
 
     public boolean getIsTourist() {
         return isTourist;
+    }
+
+    private void updateTimerLabel() {
+        int hours = secondsElapsed / 3600;
+        int minutes = (secondsElapsed % 3600) / 60;
+        int seconds = secondsElapsed % 60;
+
+        String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        this.timerLabel.setText("游戏时长: " + time);
+    }
+
+    public void startGameTimer() {
+        if (gameTimer != null && gameTimer.isRunning()) {
+            return; // Already running
+        }
+
+        // Initialize the timer to fire every 1000 milliseconds (1 second)
+        gameTimer = new Timer(1000, e -> {
+            secondsElapsed++;
+            updateTimerLabel();
+        });
+        gameTimer.start();
+    }
+
+    public void stopGameTimer() {
+        if (gameTimer != null) {
+            gameTimer.stop();
+        }
+    }
+
+    public int  getSecondsElapsed() {
+        return secondsElapsed;
+    }
+
+    public String getTimerLabel() {
+       return this.timerLabel.getText();
+    }
+    public int getRedCampScore() {
+        return redCampScore;
+    }
+    public void addRedCampScore() {
+        this.redCampScore++;
+    }
+    public void removeRedCampScore() {
+        this.redCampScore--;
+    }
+    public int getBlackCampScore() {
+        return blackCampScore;
+    }
+    public void addBlackCampScore() {
+        this.blackCampScore++;
+    }
+    public void removeBlackCampScore() {
+        this.blackCampScore--;
+    }
+
+    public void updateScoreLabel() {
+        String goalText = String.format("<html>" +
+                "<span style='color:red;'>红方: %d</span>" +
+                "<span style='color:#666;'>&nbsp;|&nbsp;</span>" + // Separator
+                "<span style='color:black;'>黑方: %d</span>" +
+                "</html>", this.redCampScore, this.blackCampScore);
+
+        this.campGoalLabel.setText(goalText);
+        // Ensure the layout manager knows a component has been updated
+        this.campGoalLabel.repaint();
     }
 }

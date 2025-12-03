@@ -221,6 +221,9 @@ public class LoginFrame extends JFrame{
         // 2. Game frame change information button
         //=====================================================
         gameFrame.getChangeinformation().addActionListener(e->{
+            gameFrame.stopGameTimer();
+            gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
+            gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
             GamePersistence.saveGame(gameFrame.getActiveSession());
             changePasswordFrame.setVisible(true);
             gameFrame.setVisible(false);
@@ -252,6 +255,15 @@ public class LoginFrame extends JFrame{
                 return;
             }
             if (model.getMoveHistory().isEmpty() == false && gameFrame.getBoardPanel().getInteractionEnabled() == false) {
+                if (currentCamp.isRedTurn()) {
+                    gameFrame.removeBlackCampScore();
+                    gameFrame.updateScoreLabel();
+                    repaint();
+                } else  {
+                    gameFrame.removeRedCampScore();
+                    gameFrame.updateScoreLabel();
+                    repaint();
+                }
                 model.removeLastMove();
                 currentCamp.returnTurn();
                 boardPanel.setNewGameModel(model, currentCamp);
@@ -265,6 +277,11 @@ public class LoginFrame extends JFrame{
             boardPanel.setStatusMessage("悔棋成功！", Color.BLUE,   false);
             gameFrame.repaint();
             }
+            gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
+            gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
+            gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
+            gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+            GamePersistence.saveGame(gameFrame.getActiveSession());
         });
 
         //=============================================================
@@ -281,6 +298,12 @@ public class LoginFrame extends JFrame{
         gameFrame.getSaveButton().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {//why this is what?
                 if (!gameFrame.getIsTourist()) {
+                    gameFrame.stopGameTimer();
+                    gameFrame.updateScoreLabel();
+                    gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
+                    gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
+                    gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
+                    gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
                     GamePersistence.saveGame(gameFrame.getActiveSession());
                 } else {
                     System.out.println("you are Tourist exit - No save");
@@ -296,11 +319,23 @@ public class LoginFrame extends JFrame{
 
                 String winner = isRedTurn ? "黑方" : "红方";
                 String loser = isRedTurn ? "红方" : "黑方";
-
+                if (isRedTurn) {
+                    gameFrame.addBlackCampScore();
+                }  else {
+                    gameFrame.addRedCampScore();
+                }
+                gameFrame.updateScoreLabel();
                 gameFrame.getBoardPanel().setStatusMessage(winner + "胜利！（" + loser + "认输）", Color.GREEN, true);
                 gameFrame.hideGiveUpOption();
                 gameFrame.getEndUpPeaceButton().setEnabled(false);
                 gameFrame.getBoardPanel().setGameInteractionEnabled(false);
+                gameFrame.stopGameTimer();
+                gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
+                gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
+                gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
+                gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+                GamePersistence.saveGame(gameFrame.getActiveSession());
+                gameFrame.repaint();
             }
         });
 
@@ -310,6 +345,14 @@ public class LoginFrame extends JFrame{
                 gameFrame.getBoardPanel().setStatusMessage("双方和棋！", Color.GREEN, true);
                 gameFrame.hideGiveUpOption();
                 gameFrame.getBoardPanel().setGameInteractionEnabled(false);
+                gameFrame.stopGameTimer();
+                gameFrame.updateScoreLabel();
+                gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
+                gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
+                gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
+                gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+                GamePersistence.saveGame(gameFrame.getActiveSession());
+                gameFrame.repaint();
                 } else {
                     return;
                 }
