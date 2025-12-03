@@ -267,13 +267,13 @@ public class ChessBoardPanel extends JPanel {
                 if (isRedTurn) {
                     isCheck = model.isInCheck(false); // 红方走后检测黑方
                     if (isCheck) {
-                        setStatusMessage("红方将黑方", Color.BLACK,  false);
+                        setStatusMessage("红方将黑方", Color.BLACK,  true);
                         messageShown = true;
                     }
                 } else {
                     isCheck = model.isInCheck(true); // 黑方走后检测红方
                     if (isCheck) {
-                        setStatusMessage("黑方将红方", Color.RED, false);
+                        setStatusMessage("黑方将红方", Color.RED, true);
                         messageShown = true;
                     }
                 }
@@ -308,11 +308,10 @@ public class ChessBoardPanel extends JPanel {
             }
 
             // Show persistent message (no timer to fade it)
-            statusLabel.setText(message);
-            statusLabel.setForeground(color);
-            statusLabel.setVisible(true);
+            setStatusMessage(message + "被将军！", color, true);
             gameFrame.hideGiveUpOption(); // 确保认输按钮隐藏
-            return;
+            this.setGameInteractionEnabled(false);
+
         } else if (inCheck) {
             Color checkColor = currentCamp.isRedTurn() ? Color.RED : Color.BLACK;
             setStatusMessage(currentCampName + "被将军！", checkColor, true);
@@ -492,9 +491,6 @@ public class ChessBoardPanel extends JPanel {
 
     public boolean getInteractionEnabled() {
         return interactionEnabled;
-    }
-    public void setInteractionEnabled(boolean interactionEnabled) {
-        this.interactionEnabled = interactionEnabled;
     }
 
     private void calculateLegalMoves(AbstractPiece piece) {
