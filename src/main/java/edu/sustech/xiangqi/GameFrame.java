@@ -21,6 +21,8 @@ public class GameFrame  extends JFrame {
     private JButton saveAndOutButton;
     private JButton restartButton;
     private JButton takeBackAMove;
+    private JButton giveUpButton;
+    private JButton endUpPeaceButton;
     private boolean isTourist;
 
     public GameFrame(String playerName) {
@@ -57,7 +59,7 @@ public class GameFrame  extends JFrame {
         // 1. creat棋盘面板 (CENTER)
         ChessBoardModel model = activeSession.getChessBoardModel();
         CurrentCamp currentCamp = activeSession.getCurrentCamp();// You'll need to update ChessBoardPanel
-        this.boardPanel = new ChessBoardPanel(model, currentCamp);
+        this.boardPanel = new ChessBoardPanel(model, currentCamp,this);
         model.setView(this.boardPanel);
         this.boardPanel.setGameInteractionEnabled(!Startbutton.isEnabled());// Match state of button
         this.add(boardPanel, BorderLayout.CENTER);
@@ -82,6 +84,13 @@ public class GameFrame  extends JFrame {
         takeBackAMove = new JButton("悔一下棋");
         takeBackAMove.setPreferredSize(buttonSize);
 
+        giveUpButton = new JButton("认输");
+        giveUpButton.setPreferredSize(buttonSize);
+        giveUpButton.setVisible(false);
+
+        endUpPeaceButton = new JButton("Peace");
+        endUpPeaceButton.setPreferredSize(buttonSize);
+
         //==============================================================
         JPanel buttonPanel = new JPanel();
         //aujust grid rows based on the mode (2 row for tourist ,5 for user)
@@ -102,7 +111,8 @@ public class GameFrame  extends JFrame {
         buttonPanel.add(saveAndOutButton);
         buttonPanel.add(takeBackAMove);
         buttonPanel.add(restartButton);
-
+        buttonPanel.add(endUpPeaceButton);
+        buttonPanel.add(giveUpButton);
 
         //侧边容器 (sidePanel)我们用一个新面板包裹 buttonPanel，防止它被 BorderLayout 拉伸
         JPanel sidePanel =new JPanel();
@@ -112,30 +122,6 @@ public class GameFrame  extends JFrame {
         // 将这个不拉伸的容器放到窗口右侧
         this.add(sidePanel, BorderLayout.EAST);
         //==========================================================// 将这个不拉伸的容器放到窗口右侧
-
-
-        //=============================================================
-        Startbutton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                // a. 启用棋盘交互
-                boardPanel.setGameInteractionEnabled(true);
-                // b. 禁用“点击开始”按钮，防止重复点击，同时提示用户已开始
-                Startbutton.setEnabled(false);
-                Startbutton.setText("游戏中...");
-            }
-        });
-
-       //save logic
-        saveAndOutButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {//why this is what?
-                if (!isTourist) {
-                GamePersistence.saveGame(activeSession);
-                } else {
-                    System.out.println("you are Tourist exit - No save");
-                }
-                dispose();//close the game window
-            }
-        });
 
         // 自动调整窗口大小
         // pack() 会根据棋盘和按钮的实际大小，自动把窗口收缩到最小（紧贴边缘）
@@ -185,4 +171,36 @@ public class GameFrame  extends JFrame {
         return this.Startbutton;
     }
 
+    public JButton getGiveUpButton() {
+        return this.giveUpButton;
+    }
+
+    public JButton getEndUpPeaceButton() {
+        return this.endUpPeaceButton;
+    }
+
+    public void showGiveUpOption(String campName) {
+        giveUpButton.setText(campName + "是否认输?");
+        giveUpButton.setVisible(true);
+    }
+
+    public void hideGiveUpOption() {
+        giveUpButton.setVisible(false);
+    }
+
+    public JButton getSaveButton() {
+        return this.saveAndOutButton;
+    }
+
+    public JButton getStartButton() {
+        return this.Startbutton;
+    }
+
+    public PlayGameSession getCurrentSession() {
+        return this.activeSession;
+    }
+
+    public boolean getIsTourist() {
+        return isTourist;
+    }
 }

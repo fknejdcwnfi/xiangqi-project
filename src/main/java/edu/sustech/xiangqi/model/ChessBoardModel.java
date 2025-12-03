@@ -179,6 +179,12 @@ public class ChessBoardModel implements Serializable {
     public boolean isInCheck(boolean isRedTurn) {
         // 1. 找到当前回合方的帅/将
         AbstractPiece general = findGeneral(isRedTurn);
+
+        if (general == null) {
+            // Treat as "in check" or immediate loss
+            return true; // Or throw an exception/log error
+        }
+
         AbstractPiece opponentGeneral = findGeneral(!isRedTurn);
         if (general == null || opponentGeneral == null) return false;
         // ----------------------------------------------------
@@ -232,6 +238,41 @@ public class ChessBoardModel implements Serializable {
             copy.addPiece(pieceCopy);
         }
         return copy;
+    }
+
+    public boolean hasLegalMoves(boolean isRed) {
+        for (AbstractPiece piece : pieces) {
+            if (piece.isRed() != isRed) continue; // Skip opponent's pieces
+
+            // Calculate potential moves (reuse logic similar to calculateLegalMoves)
+            for (int row = 0; row < getRows(); row++) {
+                for (int col = 0; col < getCols(); col++) {
+                    AbstractPiece target = getPieceAt(row, col);
+                    if (target != null && target.isRed() == piece.isRed()) continue; // Can't capture own piece
+
+                    if (piece.canMoveTo(row, col, this)) {
+                        // Simulate the move
+                        ChessBoardModel copy = deepCopy();
+                        AbstractPiece pieceCopy = copy.getPieceAt(piece.getRow(), piece.getCol());
+                        AbstractPiece targetCopy = copy.getPieceAt(row, col);
+
+                        if (targetCopy != null) {
+                            copy.remove(targetCopy);
+                        }
+
+                        if (pieceCopy != null) {
+                            copy.movePieceForce(pieceCopy, row, col);
+                        }
+
+                        // If simulation doesn't result in self-check, it's a legal move
+                        if (!copy.isInCheck(isRed)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false; // No legal moves found
     }
 }
 

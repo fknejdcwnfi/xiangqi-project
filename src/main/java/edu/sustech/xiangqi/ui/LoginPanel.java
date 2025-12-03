@@ -30,33 +30,33 @@ public class LoginPanel extends JPanel {
         //用户名的设置框架
         usernameField = new JTextField();
         usernameField.setSize(150, 25);
-        usernameField.setLocation(195, 130);
+        usernameField.setLocation(185, 130);
         this.add(usernameField);
         //用户名的设置框架
         usernameLabel = new JLabel("用户名：");
         usernameLabel.setFont(new Font("Dialog", Font.PLAIN, 14)); // 14磅
         usernameLabel.setSize(100, 50);
-        usernameLabel.setLocation(140, 120);
+        usernameLabel.setLocation(130, 120);
         this.add(usernameLabel);
 
         //密码填写框架（登录注册框）
         passwordField = new JTextField();
         passwordField.setSize(150, 25);
-        passwordField.setLocation(195, 190);
+        passwordField.setLocation(185, 190);
         this.add(passwordField);
         //密码标签（）
 
         passwordLabel = new JLabel("密码：");
         passwordLabel.setFont(new Font("Dialog", Font.PLAIN, 14)); // 14磅
         passwordLabel.setSize(100, 50);
-        passwordLabel.setLocation(150, 180);
+        passwordLabel.setLocation(140, 180);
         this.add(passwordLabel);
-        //
+
         //开始游玩按键，按了就可以进入页面
         loginButton = new JButton("用户登录");
         loginButton.setFont(new Font("Dialog", Font.BOLD, 16)); // 16磅，粗体
         loginButton.setSize(100, 50);
-        loginButton.setLocation(150, 350);
+        loginButton.setLocation(200, 300);
         this.add(loginButton);
 
         wrongLabel = new JLabel("密码错误");
@@ -78,7 +78,7 @@ public class LoginPanel extends JPanel {
         signInButton = new JButton("注册");
         signInButton.setFont(new Font("Dialog", Font.BOLD, 16)); // 16磅，粗体
         signInButton.setSize(100, 50);
-        signInButton.setLocation(250, 350);
+        signInButton.setLocation(200, 350);
         this.add(signInButton);
 
         touristButton = new JButton("游客登录");

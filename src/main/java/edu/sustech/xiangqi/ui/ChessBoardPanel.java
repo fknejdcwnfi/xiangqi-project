@@ -1,6 +1,7 @@
 package edu.sustech.xiangqi.ui;
 
 import edu.sustech.xiangqi.CurrentCamp;
+import edu.sustech.xiangqi.GameFrame;
 import edu.sustech.xiangqi.MoveEveryStep;
 import edu.sustech.xiangqi.model.ChessBoardModel;
 import edu.sustech.xiangqi.model.AbstractPiece;
@@ -40,12 +41,15 @@ public class ChessBoardPanel extends JPanel {
 
     private CurrentCamp currentCamp;
 
+    private GameFrame gameFrame;
+
     //调用那个检测下一步的红圈标记方法。
     private java.util.List<Point> legalMoves = new ArrayList<>();
 
-    public ChessBoardPanel(ChessBoardModel model, CurrentCamp camp) {
+    public ChessBoardPanel(ChessBoardModel model, CurrentCamp camp, GameFrame frame) {
         this.model = model;
         this.currentCamp = camp; //initialize with the passed object
+        this.gameFrame = frame;
         // 1. 设置布局为 null，这样我们可以用 setBounds 随意放置 Label
         this.setLayout(null);
 
@@ -98,6 +102,14 @@ public class ChessBoardPanel extends JPanel {
         return model;
     }
 
+    public boolean getInteractionEnabled() {
+        return interactionEnabled;
+    }
+
+    public void setInteractionEnabled(boolean interactionEnabled) {
+        this.interactionEnabled = interactionEnabled;
+    }
+
     //=====================================================================
     public void setGameInteractionEnabled(boolean enabled) {
         this.interactionEnabled = enabled; // 使用 this
@@ -106,10 +118,14 @@ public class ChessBoardPanel extends JPanel {
             // 游戏开始
             updateTurnLabel();   // 显示 "当前回合：红方"
         } else {
-            // 禁用时：一直显示提示
+            // 禁用时
+            if (this.model.getMoveHistory().isEmpty()) {
             statusLabel.setText("请点击开始");
             statusLabel.setForeground(Color.RED);
             statusLabel.setVisible(true);
+            } else {
+                return;
+            }
         }
         // 重新绘制，确保 Label 刷新
         repaint();
@@ -190,7 +206,7 @@ public class ChessBoardPanel extends JPanel {
                     // Check for self-check
                     boolean isSelfCheck = currentModel.isInCheck(currentCamp.isRedTurn());
                     if (isSelfCheck) {
-                        setStatusMessage("此步将导致您的帅/将被攻击，请重新选择！", Color.RED);
+                        setStatusMessage("此步将导致您的帅/将被攻击，请重新选择！", Color.RED, false);
                         selectedPiece = null;
                         legalMoves.clear();
                         repaint();
@@ -227,7 +243,7 @@ public class ChessBoardPanel extends JPanel {
 
                     boolean isSelfCheck = currentModel.isInCheck(currentCamp.isRedTurn());
                     if (isSelfCheck) {
-                        setStatusMessage("此步将导致您的帅/将被攻击，请重新选择！", Color.RED);
+                        setStatusMessage("此步将导致您的帅/将被攻击，请重新选择！", Color.RED, false);
                         selectedPiece = null;
                         legalMoves.clear();
                         repaint();
@@ -260,13 +276,13 @@ public class ChessBoardPanel extends JPanel {
                 if (isRedTurn) {
                     isCheck = model.isInCheck(false); // 红方走后检测黑方
                     if (isCheck) {
-                        setStatusMessage("红方将黑方", Color.BLACK);
+                        setStatusMessage("红方将黑方", Color.BLACK,  true);
                         messageShown = true;
                     }
                 } else {
                     isCheck = model.isInCheck(true); // 黑方走后检测红方
                     if (isCheck) {
-                        setStatusMessage("黑方将红方", Color.RED);
+                        setStatusMessage("黑方将红方", Color.RED, true);
                         messageShown = true;
                     }
                 }
@@ -277,8 +293,49 @@ public class ChessBoardPanel extends JPanel {
                 if (!messageShown) {//Only update turn label if we didn't just show a warning
                     updateTurnLabel();
                 }
-                // If messageShown is true, your Timer in setStatusMessage will
-                // automatically call updateTurnLabel() after 1.5 seconds.
+            }
+
+            //================================================================
+            boolean inCheck = model.isInCheck(currentCamp.isRedTurn());
+            boolean hasMoves = model.hasLegalMoves(currentCamp.isRedTurn());
+
+            String currentCampName = currentCamp.isRedTurn() ? "红方" : "黑方";
+
+            // 1. Handle Checkmate / Stalemate (Game Over)
+            if (!hasMoves) {
+                String message;
+                Color color = Color.GREEN;
+                if (inCheck) {
+                    // Checkmate: Opponent wins
+                    String winner = currentCamp.isRedTurn() ? "黑方" : "红方";
+                    message = winner + "胜利！（将军且无路可走）";
+                } else {
+                    // Stalemate: Draw
+                    message = "和局！（无路可走但未被将军）";
+                    color = Color.BLUE;
+                }
+
+                setStatusMessage(message, color, true);
+                setGameInteractionEnabled(false); // Disable interaction
+                gameFrame.hideGiveUpOption(); // Ensure button is hidden
+                return; // Game Over
+            }
+
+            // 2. Handle Simple Check (Not Checkmate)
+            else if (inCheck) {
+                Color checkColor = currentCamp.isRedTurn() ? Color.RED : Color.BLACK;
+                // Display Check message
+                setStatusMessage(currentCampName + "被将军！", checkColor,  true);
+
+                // Show the Give Up button for the checked player
+                gameFrame.showGiveUpOption(currentCampName);
+
+            }
+
+            // 3. Handle Normal Turn (No Check)
+            else {
+                updateTurnLabel(); // Restore/update the turn label ("Current Turn: Red/Black")
+                gameFrame.hideGiveUpOption(); // Ensure button is hidden
             }
         }
 
@@ -431,12 +488,13 @@ public class ChessBoardPanel extends JPanel {
         this.repaint();
     }
 
-     //全局的文字 method
-    public void setStatusMessage(String statusMessage, Color color) {
+    //全局的文字 method
+    public void setStatusMessage(String statusMessage, Color color, boolean isPermanent) {
         statusLabel.setText(statusMessage);
         statusLabel.setForeground(color);
         statusLabel.setVisible(true);
 
+        if (isPermanent) {
         Timer timer = new Timer(1500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -451,6 +509,7 @@ public class ChessBoardPanel extends JPanel {
         });
         timer.setRepeats(false);
         timer.start();
+       }
     }
 
     private void calculateLegalMoves(AbstractPiece piece) {

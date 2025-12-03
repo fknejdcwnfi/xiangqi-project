@@ -82,6 +82,7 @@ public class LoginFrame extends JFrame{
         //从登录到注册的启动按键
         loginPanel.getSignInButton().addActionListener(e -> {
             signinFrame.setVisible(true);
+            signinFrame.setLocationRelativeTo(null);
             this.setVisible(false);
         });
 
@@ -247,15 +248,62 @@ public class LoginFrame extends JFrame{
             ChessBoardPanel boardPanel = gameFrame.getBoardPanel();
 
             if (model.getMoveHistory().isEmpty()) {
-                boardPanel.setStatusMessage("无法悔棋", Color.RED);
+                boardPanel.setStatusMessage("无法悔棋", Color.RED, false);
                 return;
             }
-
+            if (model.getMoveHistory().isEmpty() == false && gameFrame.getBoardPanel().getInteractionEnabled() == false) {
+                model.removeLastMove();
+                currentCamp.returnTurn();
+                boardPanel.setNewGameModel(model, currentCamp);
+                gameFrame.getBoardPanel().setGameInteractionEnabled(true);
+                boardPanel.setStatusMessage("悔棋成功！", Color.BLUE,  false);
+                gameFrame.repaint();
+            } else {
             model.removeLastMove();
             currentCamp.returnTurn();
             boardPanel.setNewGameModel(model, currentCamp);
-            boardPanel.setStatusMessage("悔棋成功！", Color.BLUE);
+            boardPanel.setStatusMessage("悔棋成功！", Color.BLUE,   false);
             gameFrame.repaint();
+            }
         });
+
+        //=============================================================
+        gameFrame.getStartButton().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // a. 启用棋盘交互
+                gameFrame.getBoardPanel().setGameInteractionEnabled(true);
+                // b. 禁用“点击开始”按钮，防止重复点击，同时提示用户已开始
+                gameFrame.getStartButton().setEnabled(false);
+                gameFrame.getStartButton().setText("游戏中...");
+            }
+        });
+
+        gameFrame.getSaveButton().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {//why this is what?
+                if (!gameFrame.getIsTourist()) {
+                    GamePersistence.saveGame(gameFrame.getActiveSession());
+                } else {
+                    System.out.println("you are Tourist exit - No save");
+                }
+                dispose();//close the game window
+            }
+        });
+
+        gameFrame.getGiveUpButton().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                //the current active camp is the one whose general is in check
+                boolean isRedTurn = gameFrame.getActiveSession().getCurrentCamp().isRedTurn();
+
+                String winner = isRedTurn ? "黑方" : "红方";
+                String loser = isRedTurn ? "红方" : "黑方";
+
+                gameFrame.getBoardPanel().setStatusMessage(winner + "胜利！（" + loser + "认输）", Color.GREEN, true);
+                gameFrame.hideGiveUpOption();
+                gameFrame.getBoardPanel().setGameInteractionEnabled(false);
+
+
+            }
+        });
+
     }
 }
