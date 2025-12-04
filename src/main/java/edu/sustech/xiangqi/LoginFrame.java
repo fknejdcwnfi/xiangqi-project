@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.net.URL;
 import java.util.Scanner;
 
 import static edu.sustech.xiangqi.InterChecking.*;
@@ -26,17 +27,53 @@ public class LoginFrame extends JFrame{
     private ChangePasswordFrame changePasswordFrame;
     private SigninFrame signinFrame;
 
+
+    // 内部类：带背景的面板（直接嵌套在LoginFrame中）
+    static class BackgroundPanel extends JPanel {
+        private Image backgroundImage;
+        public BackgroundPanel() {
+            // 加载背景图（路径根据实际情况调整）
+            URL imgUrl = getClass().getResource("/Picture/生成象棋登录界面照片2.png");
+            if (imgUrl != null) {
+                backgroundImage = new ImageIcon(imgUrl).getImage();
+            } else {
+                System.out.println("背景图路径错误！");
+            }
+            setLayout(null); // 和原有布局保持一致
+            setPreferredSize(new Dimension(500, 500)); // 匹配窗口大小
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (backgroundImage != null) {
+                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            }
+        }
+    }
+
     public LoginFrame() {
         super("中国象棋 - 登录");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(500, 500);
         this.setLocationRelativeTo(null);
-        this.setLayout(new BorderLayout());
+
+        // 初始化登录面板并添加到背景面板
+        BackgroundPanel backgroundPanel = new BackgroundPanel();
+        this.setContentPane(backgroundPanel);
+        // 最后启用布局并刷新
+        // 1. 先初始化背景面板和登录组件
         this.loginPanel = new LoginPanel();
+        this.loginPanel.setOpaque(false); // 关键：LoginPanel透明，显示背景图
+        this.loginPanel.setBounds(0, 0, 500, 500); // 关键：手动指定LoginPanel的位置和大小（和窗口一致
+        backgroundPanel.add(this.loginPanel, BorderLayout.CENTER); // 指定布局位置
+        // 初始化其他窗口（原有逻辑不变）
+
+
         this.signinFrame = new SigninFrame();
         this.changePasswordFrame = new ChangePasswordFrame();
         this.setVisible(true);
-        this.add(this.loginPanel);
+        //this.add(this.loginPanel);
 
         try {
             Scanner nickname = new Scanner(new File(".\\src\\main\\java\\edu\\sustech\\xiangqi\\Nickname"));
@@ -64,7 +101,8 @@ public class LoginFrame extends JFrame{
                         gameFrame.setLocationRelativeTo(null);
                         gameFrame.setVisible(true);
                     }//密码错误
-                    else{TimeForDisplayAndLater.displayAndHideJLabel(loginPanel.wrongLabel(),500);
+                    else{
+                        TimeForDisplayAndLater.displayAndHideJLabel(loginPanel.wrongLabel(),500);
                         loginPanel.unexistLabel().setVisible(false);
                     }
                 }//下面是用户不存在

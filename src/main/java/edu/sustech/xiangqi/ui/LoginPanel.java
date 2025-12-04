@@ -2,6 +2,7 @@ package edu.sustech.xiangqi.ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.InputStream;
 
 public class LoginPanel extends JPanel {
     private JTextField usernameField;
@@ -21,20 +22,22 @@ public class LoginPanel extends JPanel {
         //输入框是什么？
         //
         JLabel login = new JLabel("登录");
-        login.setFont(new Font("Dialog", Font.BOLD, 24)); // 使用默认字体，24磅，粗体
+        login.setFont(new Font("华文行楷", Font.BOLD, 36)); // 使用默认字体，24磅，粗体
         login.setSize(100, 50);
         login.setLocation(225, 50);
         this.add(login);
         //
-
         //用户名的设置框架
         usernameField = new JTextField();
         usernameField.setSize(150, 25);
         usernameField.setLocation(185, 130);
+
+        // 设置加粗边框：宽度设为2（或更大），颜色匹配界面风格
+        usernameField.setBorder(BorderFactory.createLineBorder(new Color(139, 69, 19), 2)); // 深棕色+2px粗边框
         this.add(usernameField);
         //用户名的设置框架
         usernameLabel = new JLabel("用户名：");
-        usernameLabel.setFont(new Font("Dialog", Font.PLAIN, 14)); // 14磅
+        usernameLabel.setFont(new Font("华文行楷", Font.PLAIN, 14)); // 14磅
         usernameLabel.setSize(100, 50);
         usernameLabel.setLocation(130, 120);
         this.add(usernameLabel);
@@ -43,24 +46,27 @@ public class LoginPanel extends JPanel {
         passwordField = new JTextField();
         passwordField.setSize(150, 25);
         passwordField.setLocation(185, 190);
+        // 设置加粗边框：宽度设为2（或更大），颜色匹配界面风格
+        passwordField.setBorder(BorderFactory.createLineBorder(new Color(139, 69, 19), 2)); // 深棕色+2px粗边框
+
         this.add(passwordField);
         //密码标签（）
 
         passwordLabel = new JLabel("密码：");
-        passwordLabel.setFont(new Font("Dialog", Font.PLAIN, 14)); // 14磅
+        passwordLabel.setFont(new Font("华文行楷", Font.PLAIN, 14)); // 14磅
         passwordLabel.setSize(100, 50);
         passwordLabel.setLocation(140, 180);
         this.add(passwordLabel);
 
         //开始游玩按键，按了就可以进入页面
-        loginButton = new JButton("用户登录");
-        loginButton.setFont(new Font("Dialog", Font.BOLD, 16)); // 16磅，粗体
+        loginButton = new AncientButton("用户登录");
+        loginButton.setFont(new Font("华文行楷", Font.BOLD, 16)); // 16磅，粗体
         loginButton.setSize(100, 50);
         loginButton.setLocation(200, 300);
         this.add(loginButton);
 
         wrongLabel = new JLabel("密码错误");
-        wrongLabel.setFont(new Font("Dialog", Font.PLAIN, 12)); // 12磅
+        wrongLabel.setFont(new Font("华文行楷", Font.PLAIN, 12)); // 12磅
         wrongLabel.setForeground(java.awt.Color.RED); // 设置颜色为红色
         wrongLabel.setSize(100, 50);
         wrongLabel.setLocation(230, 230);
@@ -68,21 +74,21 @@ public class LoginPanel extends JPanel {
         wrongLabel.setVisible(false);
 
         unexistLabel = new JLabel("用户名不存在");
-        unexistLabel.setFont(new Font("Dialog", Font.PLAIN, 12)); // 12磅
+        unexistLabel.setFont(new Font("华文行楷", Font.PLAIN, 12)); // 12磅
         unexistLabel.setForeground(java.awt.Color.RED); // 设置颜色为红色
         unexistLabel.setSize(200, 50);
         unexistLabel.setLocation(210, 230);
         this.add(unexistLabel);
         unexistLabel.setVisible(false);
 
-        signInButton = new JButton("注册");
-        signInButton.setFont(new Font("Dialog", Font.BOLD, 16)); // 16磅，粗体
+        signInButton = new AncientButton("注册");
+        signInButton.setFont(new Font("华文行楷", Font.BOLD, 16)); // 16磅，粗体
         signInButton.setSize(100, 50);
         signInButton.setLocation(200, 350);
         this.add(signInButton);
 
-        touristButton = new JButton("游客登录");
-        touristButton.setFont(new Font("Dialog", Font.BOLD, 16)); // 16磅，粗体
+        touristButton = new AncientButton("游客登录");
+        touristButton.setFont(new Font("华文行楷", Font.BOLD, 16)); // 16磅，粗体
         touristButton.setSize(100, 50);
         touristButton.setLocation(200, 400);
         this.add(touristButton);
