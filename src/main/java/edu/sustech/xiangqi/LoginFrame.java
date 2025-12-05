@@ -385,6 +385,7 @@ public class LoginFrame extends JFrame{
                 gameFrame.getBoardPanel().setGameInteractionEnabled(false);
                 gameFrame.stopGameTimer();
                 gameFrame.updateScoreLabel();
+                gameFrame.getTakeBackAMove().setEnabled(false);
                 gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
                 gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
                 gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());

@@ -1,5 +1,7 @@
 package edu.sustech.xiangqi;
 
+import edu.sustech.xiangqi.ui.AncientButton;
+
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
@@ -117,7 +119,7 @@ public class ChangePasswordFrame extends JFrame {
         this.add(newPasswordText);
         //
         //开始游玩按键，按了就可以进入页面
-        changePasswordButton = new JButton("确认修改");
+        changePasswordButton = new AncientButton("确认修改");
         changePasswordButton.setFont(new Font("华文行楷", Font.BOLD, 16)); // 16磅，粗体
         changePasswordButton.setSize(100, 50);
         changePasswordButton.setLocation(150, 350);
@@ -128,7 +130,7 @@ public class ChangePasswordFrame extends JFrame {
 
         this.add(changePasswordButton);
 
-        returnTotheGame = new JButton("返回游戏");
+        returnTotheGame = new AncientButton("返回游戏");
         returnTotheGame.setFont(new Font("华文行楷", Font.BOLD, 16)); // 16磅，粗体
         returnTotheGame.setSize(100, 50);
         returnTotheGame.setLocation(250, 350);

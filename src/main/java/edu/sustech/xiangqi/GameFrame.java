@@ -1,5 +1,5 @@
 package edu.sustech.xiangqi;
-
+import edu.sustech.xiangqi.ui.AncientButton;
 import edu.sustech.xiangqi.model.ChessBoardModel;
 import edu.sustech.xiangqi.ui.ChessBoardPanel;
 
@@ -34,7 +34,7 @@ public class GameFrame extends JFrame {
     private int blackCampScore;
 
     // CONSTANTS
-    private static final int SIDE_PANEL_WIDTH = 220; // Width for Left and Right panels to ensure symmetry
+    private static final int SIDE_PANEL_WIDTH = 300; // Width for Left and Right panels to ensure symmetry
     private static final Dimension BUTTON_SIZE = new Dimension(140, 45);
 
     public GameFrame(String playerName) {
@@ -80,14 +80,14 @@ public class GameFrame extends JFrame {
     private void initializeSession() {
         if (isTourist) {
             activeSession = new PlayGameSession("Tourist");
-            Startbutton = new JButton("点击开始");
+            Startbutton = new AncientButton("点击开始");
         } else {
             activeSession = GamePersistence.loadGame(playerName);
             if (activeSession == null) {
                 activeSession = new PlayGameSession(playerName);
-                Startbutton = new JButton("点击开始");
+                Startbutton = new AncientButton("点击开始");
             } else {
-                Startbutton = new JButton("游戏中");
+                Startbutton = new AncientButton("游戏中");
                 Startbutton.setEnabled(false);
             }
         }
@@ -150,7 +150,7 @@ public class GameFrame extends JFrame {
         if(initialTimeText == null) initialTimeText = "游戏时长: 00:00:00";
 
         timerLabel = new JLabel(initialTimeText);
-        timerLabel.setFont(new Font("Dialog", Font.BOLD, 15));
+        timerLabel.setFont(new Font("华文行楷", Font.BOLD, 24));
         timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentContainer.add(timerLabel);
 
@@ -165,7 +165,7 @@ public class GameFrame extends JFrame {
                 "</div></html>", redCampScore, blackCampScore);
 
         campGoalLabel = new JLabel(goalText, SwingConstants.CENTER);
-        campGoalLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        campGoalLabel.setFont(new Font("华文行楷", Font.PLAIN, 14));
         campGoalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentContainer.add(campGoalLabel);
 
@@ -188,24 +188,24 @@ public class GameFrame extends JFrame {
         // Initialize Buttons
         Startbutton.setPreferredSize(BUTTON_SIZE);
 
-        changeinformation = new JButton("修改信息");
+        changeinformation = new AncientButton("修改信息");
         changeinformation.setPreferredSize(BUTTON_SIZE);
 
         String exitText = isTourist ? "退出游戏" : "存档并退出";
-        saveAndOutButton = new JButton(exitText);
+        saveAndOutButton = new AncientButton(exitText);
         saveAndOutButton.setPreferredSize(BUTTON_SIZE);
 
-        restartButton = new JButton("重新开始");
+        restartButton = new AncientButton("重新开始");
         restartButton.setPreferredSize(BUTTON_SIZE);
 
-        takeBackAMove = new JButton("悔一下棋");
+        takeBackAMove = new AncientButton("悔一下棋");
         takeBackAMove.setPreferredSize(BUTTON_SIZE);
 
-        giveUpButton = new JButton("认输");
+        giveUpButton = new AncientButton("认输");
         giveUpButton.setPreferredSize(BUTTON_SIZE);
         giveUpButton.setVisible(false);
 
-        endUpPeaceButton = new JButton("求和");
+        endUpPeaceButton = new AncientButton("求和");
         endUpPeaceButton.setPreferredSize(BUTTON_SIZE);
 
         // Add Buttons to Container
@@ -273,6 +273,7 @@ public class GameFrame extends JFrame {
 
         String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
         this.timerLabel.setText("游戏时长: " + time);
+        this.timerLabel.setFont(new Font("华文行楷", Font.PLAIN, 24));
     }
 
     public void startGameTimer() {
