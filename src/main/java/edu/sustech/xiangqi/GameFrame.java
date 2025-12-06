@@ -398,4 +398,20 @@ public class GameFrame extends JFrame {
         timer.start();
         }
     }
+
+    public void refreshLastMoveVisuals() {
+        // Note: Use the fully qualified name if MoveEveryStep is not explicitly imported in GameFrame
+        java.util.List<edu.sustech.xiangqi.MoveEveryStep> history = activeSession.getChessBoardModel().getMoveHistory();
+
+        if (history != null && !history.isEmpty()) {
+            // Get the very last move
+            edu.sustech.xiangqi.MoveEveryStep lastMove = history.get(history.size() - 1);
+
+            // Tell the panel to highlight this move
+            boardPanel.setLastMove(lastMove);
+        } else {
+            // No moves in history (start of game or full undo), clear highlights
+            boardPanel.setLastMove(null);
+        }
+    }
 }

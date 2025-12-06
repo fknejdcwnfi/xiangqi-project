@@ -37,6 +37,8 @@ public class ChessBoardPanel extends JPanel {
 
     private CurrentCamp currentCamp;
 
+    private MoveEveryStep lastMove = null;
+
     //调用那个检测下一步的红圈标记方法。
     private java.util.List<Point> legalMoves = new ArrayList<>();
     private GameFrame gameFrame;
@@ -247,6 +249,8 @@ public class ChessBoardPanel extends JPanel {
                 legalMoves.clear();
                 selectedPiece = null;
 
+                gameFrame.refreshLastMoveVisuals();
+
                 if (!messageShown) {//Only update turn label if we didn't just show a warning
                     updateTurnLabel();
                 }
@@ -308,6 +312,7 @@ public class ChessBoardPanel extends JPanel {
         // Demo的GUI都是由Swing中基本的组件组成的，比如背景的格子是用许多个line组合起来实现的，棋子是先绘制一个circle再在上面绘制一个text实现的
         // 因此绘制GUI的过程中需要自己手动计算每个组件的位置（坐标）
         drawBoard(g2d);
+        drawLastMoveHighlights(g2d);
         drawPieces(g2d);
         drawLegalMoves(g);//new bulid
     }
@@ -610,6 +615,112 @@ public class ChessBoardPanel extends JPanel {
 
         // 关闭抗锯齿
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+    }
+
+    public void setLastMove(MoveEveryStep move) {
+        this.lastMove = move;
+        repaint(); // Trigger a redraw
+    }
+
+    // 3. Helper method to calculate X/Y (You likely already have this logic, use yours)
+    // This is just an example assuming you have 'cellSize' and 'margin'
+    private int getX(int col) {
+        // REPLACE THIS with your actual calculation logic
+        // Example: return margin + col * cellSize;
+        return MARGIN + col * CELL_SIZE;
+    }
+
+    private int getY(int row) {
+        // REPLACE THIS with your actual calculation logic
+        return MARGIN + row * CELL_SIZE;
+    }
+
+    private void drawLastMoveHighlights(Graphics g) {
+        if (lastMove == null) return;
+
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Get move coordinates
+        int startRow = lastMove.getStartRow();
+        int startCol = lastMove.getStartCol();
+        int endRow = lastMove.getEndRow();
+        int endCol = lastMove.getEndCol();
+
+        // The piece that was moved (used for its name and color)
+        AbstractPiece movedPiece = lastMove.getMovingPiece();
+
+        // Calculate pixel positions
+        int sX = getX(startCol);
+        int sY = getY(startRow);
+        int eX = getX(endCol);
+        int eY = getY(endRow);
+
+        final int HIGHLIGHT_RADIUS = PIECE_RADIUS + 5;
+        final int DIAMETER = HIGHLIGHT_RADIUS * 2;
+
+        // =========================================================================
+        // A. Draw PHANTOM PIECE at Start Position (Origin) - Unchanged
+        // =========================================================================
+        if (movedPiece != null) {
+            // Set up high transparency for the phantom effect (Alpha: 0.25f)
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
+
+            // 1. Draw Phantom Circle Background
+            g2d.setColor(new Color(245, 222, 179)); // Piece background
+            g2d.fillOval(sX - PIECE_RADIUS, sY - PIECE_RADIUS, PIECE_RADIUS * 2, PIECE_RADIUS * 2);
+
+            // 2. Draw Phantom Circle Border (solid dark gray, high opacity)
+            g2d.setColor(Color.DARK_GRAY);
+            g2d.setStroke(new BasicStroke(2.0f));
+            g2d.drawOval(sX - PIECE_RADIUS, sY - PIECE_RADIUS, PIECE_RADIUS * 2, PIECE_RADIUS * 2);
+
+            // 3. Draw Phantom Piece Name
+            g2d.setColor(movedPiece.isRed() ? new Color(200, 0, 0) : Color.BLACK);
+            g2d.setFont(new Font("宋体", Font.BOLD, 28));
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(movedPiece.getName());
+            int textHeight = fm.getAscent();
+            g2d.drawString(movedPiece.getName(), sX - textWidth / 2, sY + textHeight / 2 - 2);
+
+            // Reset Composite/Opacity back to 1.0f for subsequent drawing
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+
+            // 4. Draw a distinct dashed outline around the phantom piece
+            float[] dashPattern = {4f, 4f};
+            Stroke dashedStroke = new BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f, dashPattern, 0.0f);
+
+            g2d.setStroke(dashedStroke);
+            g2d.setColor(new Color(150, 150, 150)); // Medium gray
+            g2d.drawOval(sX - HIGHLIGHT_RADIUS, sY - HIGHLIGHT_RADIUS, DIAMETER, DIAMETER);
+        }
+
+
+        // =========================================================================
+        // B. Draw End Position (Striking BLUE Highlight)
+        // =========================================================================
+
+        // Define Blue Colors
+        final Color BLUE_INNER = new Color(50, 150, 255, 150); // Bright Blue center
+        final Color BLUE_OUTER = new Color(50, 150, 255, 0);   // Transparent edge
+        final Color BLUE_RING = new Color(50, 150, 255, 255); // Solid Blue ring
+
+        // 1. Draw Radial Gradient (Blue)
+        g2d.setStroke(new BasicStroke(1.0f));
+
+        RadialGradientPaint gradient = new RadialGradientPaint(
+                eX, eY, HIGHLIGHT_RADIUS,
+                new float[]{0.0f, 1.0f},
+                new Color[]{BLUE_INNER, BLUE_OUTER} // Use new blue colors
+        );
+
+        g2d.setPaint(gradient);
+        g2d.fillOval(eX - HIGHLIGHT_RADIUS, eY - HIGHLIGHT_RADIUS, DIAMETER, DIAMETER);
+
+        // 2. Add a solid striking ring (Blue)
+        g2d.setColor(BLUE_RING);
+        g2d.setStroke(new BasicStroke(3.0f));
+        g2d.drawOval(eX - HIGHLIGHT_RADIUS, eY - HIGHLIGHT_RADIUS, DIAMETER, DIAMETER);
     }
 }
 

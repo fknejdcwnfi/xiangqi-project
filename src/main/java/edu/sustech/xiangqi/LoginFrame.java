@@ -249,10 +249,12 @@ public class LoginFrame extends JFrame{
             gameFrame.setCurrentCamp(newActiveSession.getCurrentCamp());
             //Update the ChessBoardPanel's reference to the new model and camp.
             gameFrame.getBoardPanel().setNewGameModel(newActiveSession.getChessBoardModel(), newActiveSession.getCurrentCamp());
+            gameFrame.refreshLastMoveVisuals();
             gameFrame.getStartbutton().setEnabled(true);
             gameFrame.getStartbutton().setText("点击开始");
             gameFrame.getBoardPanel().setGameInteractionEnabled(false);
             gameFrame.getEndUpPeaceButton().setEnabled(true);
+            gameFrame.getTakeBackAMove().setEnabled(true);
             gameFrame.repaint(); // Force GameFrame to redraw everything
         });
 
@@ -293,7 +295,7 @@ public class LoginFrame extends JFrame{
                 gameFrame.updateStatusMessage("无法悔棋", Color.RED, false);
                 return;
             }
-            if (model.getMoveHistory().isEmpty() == false && gameFrame.getBoardPanel().getInteractionEnabled() == false && gameFrame.getEndUpPeaceButton().isEnabled() == true) {
+            if (model.getMoveHistory().isEmpty() == false && gameFrame.getBoardPanel().getInteractionEnabled() == false && gameFrame.getEndUpPeaceButton().isEnabled() == false) {
                 if (currentCamp.isRedTurn()) {
                     gameFrame.removeBlackCampScore();
                     gameFrame.updateScoreLabel();
@@ -313,13 +315,14 @@ public class LoginFrame extends JFrame{
             model.removeLastMove();
             currentCamp.returnTurn();
             boardPanel.setNewGameModel(model, currentCamp);
-            if (!gameFrame.getEndUpPeaceButton().isEnabled()) {
-                    gameFrame.getEndUpPeaceButton().setEnabled(true);
-                    gameFrame.getBoardPanel().setGameInteractionEnabled(true);
-            }
             gameFrame.updateStatusMessage("悔棋成功！", Color.BLUE, false);
             gameFrame.repaint();
             }
+            if (!gameFrame.getEndUpPeaceButton().isEnabled()) {
+                gameFrame.getEndUpPeaceButton().setEnabled(true);
+                gameFrame.getBoardPanel().setGameInteractionEnabled(true);
+            }
+            gameFrame.refreshLastMoveVisuals();
             gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
             gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
             gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
@@ -392,6 +395,7 @@ public class LoginFrame extends JFrame{
                 gameFrame.stopGameTimer();
                 gameFrame.updateScoreLabel();
                 gameFrame.getEndUpPeaceButton().setEnabled(false);
+                gameFrame.getTakeBackAMove().setEnabled(false);
                 gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
                 gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
                 gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
