@@ -3,6 +3,7 @@ package edu.sustech.xiangqi;
 
 
 import edu.sustech.xiangqi.model.ChessBoardModel;
+import edu.sustech.xiangqi.ui.AudioPlayer;
 import edu.sustech.xiangqi.ui.ChessBoardPanel;
 import edu.sustech.xiangqi.ui.LoginPanel;
 
@@ -73,7 +74,8 @@ public class LoginFrame extends JFrame{
         this.signinFrame = new SigninFrame();
         this.changePasswordFrame = new ChangePasswordFrame();
         this.setVisible(true);
-        //this.add(this.loginPanel);
+
+        AudioPlayer.playLoopingSound("src/main/resources/Audio/我的歌声里.wav");
 
         try {
             Scanner nickname = new Scanner(new File(".\\src\\main\\java\\edu\\sustech\\xiangqi\\Nickname"));
@@ -95,6 +97,7 @@ public class LoginFrame extends JFrame{
                         //=================================================================
 
                         //display the GameFrame
+                        AudioPlayer.stopLoopingSound("src/main/resources/Audio/我的歌声里.wav");
                         gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                         gameFrame.pack();
                         gameFrame. getRestartButton().setVisible(true);
@@ -162,7 +165,7 @@ public class LoginFrame extends JFrame{
                                 //set up listeners for the new instance
                                 LoginFrame.this.setupGameFrameListeners();
                                 //=============================================================
-
+                                AudioPlayer.stopLoopingSound("src/main/resources/Audio/我的歌声里.wav");
                                 LoginFrame.this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                                 LoginFrame.this.gameFrame.pack();
                                 LoginFrame.this.gameFrame.getRestartButton().setVisible(true);
@@ -200,6 +203,7 @@ public class LoginFrame extends JFrame{
 
         // 游客登录相关的相应
         this.loginPanel.getTouristButton().addActionListener(e -> {
+                    AudioPlayer.stopLoopingSound("src/main/resources/Audio/我的歌声里.wav");
                     this.gameFrame = new GameFrame(null);
                     this.setupGameFrameListeners();
                     gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -262,6 +266,8 @@ public class LoginFrame extends JFrame{
         // 2. Game frame change information button
         //=====================================================
         gameFrame.getChangeinformation().addActionListener(e->{
+            AudioPlayer.stopLoopingSound("src/main/resources/Audio/斗地主.wav");
+            AudioPlayer.playLoopingSound("src/main/resources/Audio/我的歌声里.wav");
             gameFrame.stopGameTimer();
             gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
             gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
@@ -274,6 +280,8 @@ public class LoginFrame extends JFrame{
 
         // 3. Game frame return from password change (already defined)
         changePasswordFrame.getReturnToTheGame().addActionListener(e->{
+            AudioPlayer.stopLoopingSound("src/main/resources/Audio/我的歌声里.wav");
+            AudioPlayer.playLoopingSound("src/main/resources/Audio/斗地主.wav");
             changePasswordFrame.setVisible(false);
             gameFrame.setVisible(true);
         });
@@ -323,6 +331,7 @@ public class LoginFrame extends JFrame{
                 gameFrame.getBoardPanel().setGameInteractionEnabled(true);
             }
             gameFrame.refreshLastMoveVisuals();
+            AudioPlayer.playSound("src/main/resources/Audio/悔棋.WAV");
             gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
             gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
             gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
@@ -389,7 +398,7 @@ public class LoginFrame extends JFrame{
             public void actionPerformed(ActionEvent e) {
                 if (!gameFrame.getActiveSession().getChessBoardModel().getMoveHistory().isEmpty()) {
                     gameFrame.updateStatusMessage("双方和棋！", Color.BLUE, true);
-                //gameFrame.getBoardPanel().setStatusMessage("双方和棋！", Color.GREEN, true);
+                    AudioPlayer.playSound("src/main/resources/Audio/双方和棋.WAV");
                 gameFrame.hideGiveUpOption();
                 gameFrame.getBoardPanel().setGameInteractionEnabled(false);
                 gameFrame.stopGameTimer();

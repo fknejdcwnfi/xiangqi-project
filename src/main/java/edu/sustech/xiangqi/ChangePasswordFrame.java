@@ -1,6 +1,7 @@
 package edu.sustech.xiangqi;
 
 import edu.sustech.xiangqi.ui.AncientButton;
+import edu.sustech.xiangqi.ui.AudioPlayer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,6 +52,7 @@ public class ChangePasswordFrame extends JFrame {
         this.setLocationRelativeTo(null);
         this.setLayout(null);
         this.setSize(500, 500);
+        AudioPlayer.playLoopingSound("src/main/resources/Audio/我的歌声里.wav");
         // 初始化背景面板
         backgroundPanel = new BackgroundPanel();
         this.setContentPane(backgroundPanel);

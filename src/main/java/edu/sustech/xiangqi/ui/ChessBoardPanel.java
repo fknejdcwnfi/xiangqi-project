@@ -84,7 +84,7 @@ public class ChessBoardPanel extends JPanel {
     //=====================================================================
     public void setGameInteractionEnabled(boolean enabled) {
 
-        String bgmPath="src/main/resources/Audio/"+"斗地主.wav";
+        String bgmPath="src/main/resources/Audio/" + "斗地主.wav";
         if (isGameOver) {
             return;
         }
@@ -92,8 +92,6 @@ public class ChessBoardPanel extends JPanel {
             // 启动循环音效（单例防止叠加）
             AudioPlayer.playLoopingSound(bgmPath);
         } else {
-            // 关闭交互时，停止循环音效
-            //AudioPlayer.stopLoopingSound(bgmPath);
         }
 
         this.interactionEnabled = enabled; // 使用 this
@@ -126,6 +124,10 @@ public class ChessBoardPanel extends JPanel {
 
         int col = Math.round((float) (x - MARGIN) / CELL_SIZE);
         int row = Math.round((float) (y - MARGIN) / CELL_SIZE);
+
+        int eatintCount = 0;
+        int isInCheckCount = 0;
+        int mustDie = 0;
 
         //吃子移动的代码如下
         if (!model.isValidPosition(row, col)) {//model 是‌棋盘模型对象‌
@@ -189,7 +191,7 @@ public class ChessBoardPanel extends JPanel {
                     }
 
                     MoveEveryStep move = new MoveEveryStep(selectedPiece, row, col, target, this.currentCamp);
-                    AudioPlayer.playSound("src/main/resources/Audio/吃.wav");
+                    eatintCount++;
                     model.recordMove(move);
                     //这是记录棋子的吃子情况
 
@@ -250,14 +252,14 @@ public class ChessBoardPanel extends JPanel {
                 if (isRedTurn) {
                     isCheck = model.isInCheck(false); // 红方走后检测黑方
                     if (isCheck) {
-                        AudioPlayer.playSound("src/main/resources/Audio/将军.wav");
+                        isInCheckCount++;
                         gameFrame.updateStatusMessage("红方将黑方", Color.RED, true);
                         messageShown = true;
                     }
                 } else {
                     isCheck = model.isInCheck(true); // 黑方走后检测红方
                     if (isCheck) {
-                        AudioPlayer.playSound("src/main/resources/Audio/将军.wav");
+                        isInCheckCount++;
                         gameFrame.updateStatusMessage("黑方将红方", Color.BLACK, true);
                         messageShown = true;
                     }
@@ -289,40 +291,35 @@ public class ChessBoardPanel extends JPanel {
             Color color = Color.BLUE;
             if (inCheck) {
                 // Checkmate: The previous player wins
-                isGameOver=true;
-                AudioPlayer.stopAllLoopingSounds();
+                isGameOver = true;
+                //AudioPlayer.stopAllLoopingSounds();
                 setGameInteractionEnabled(false);
                 String winner = currentCamp.isRedTurn() ? "黑方" : "红方";
                 String loser = currentCamp.isRedTurn() ? "红方" : "黑方";
                 message = winner + "将死" + loser;
                 if (currentCamp.isRedTurn()) {
-                    AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
                     gameFrame.addBlackCampScore();
                     gameFrame.updateScoreLabel();
                     repaint();
                 } else  {
-                    AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
                     gameFrame.addRedCampScore();
                     gameFrame.updateScoreLabel();
                     repaint();
                 }
             } else {
                 // Stalemate: Draw
-
-                isGameOver=true;
-                AudioPlayer.stopAllLoopingSounds();
+                isGameOver = true;
+                //AudioPlayer.stopAllLoopingSounds();
                 setGameInteractionEnabled(false);
 
                 String winner = currentCamp.isRedTurn() ? "黑方" : "红方";
                 String loser = currentCamp.isRedTurn() ? "红方" : "黑方";
                 message ="困毙：" +  winner + "胜利";
                 if (currentCamp.isRedTurn()) {
-                    AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
                     gameFrame.addBlackCampScore();
                     gameFrame.updateScoreLabel();
                     repaint();
                 } else  {
-                    AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
                     gameFrame.addRedCampScore();
                     gameFrame.updateScoreLabel();
                     repaint();
@@ -330,6 +327,7 @@ public class ChessBoardPanel extends JPanel {
             }
 
             // Show persistent message (no timer to fade it)
+            mustDie++;
             gameFrame.updateStatusMessage(message, Color.RED, true);
             gameFrame.hideGiveUpOption(); // 确保认输按钮隐藏
             gameFrame.getEndUpPeaceButton().setEnabled(false);
@@ -342,6 +340,16 @@ public class ChessBoardPanel extends JPanel {
         } else {
             updateTurnLabel(); // 更新回合文字
             gameFrame.hideGiveUpOption(); // 确保认输按钮隐藏
+        }
+
+        if (eatintCount == 1 && mustDie == 0 && isInCheckCount == 0) {
+            AudioPlayer.playSound("src/main/resources/Audio/吃.wav");
+        }
+        if (eatintCount == 1 && mustDie == 0 && isInCheckCount == 1) {
+            AudioPlayer.playSound("src/main/resources/Audio/将军.wav");
+        }
+        if (eatintCount == 1 && mustDie == 1 && isInCheckCount == 1) {
+            AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
         }
     }
 
