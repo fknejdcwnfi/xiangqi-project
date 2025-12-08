@@ -128,6 +128,7 @@ public class ChessBoardPanel extends JPanel {
         int eatintCount = 0;
         int isInCheckCount = 0;
         int mustDie = 0;
+        int justMoveCount = 0;
 
         //吃子移动的代码如下
         if (!model.isValidPosition(row, col)) {//model 是‌棋盘模型对象‌
@@ -231,7 +232,7 @@ public class ChessBoardPanel extends JPanel {
                     MoveEveryStep move = new MoveEveryStep(selectedPiece, row, col, null, this.currentCamp);
                     model.recordMove(move);//实现存储和输出文字（在Model方法里面）
                     //这是记录普通的移动过情况
-
+                    justMoveCount++;
                     model.movePiece(selectedPiece, row, col);
                     selectedPiece = null;
                     moveSuccess = true;
@@ -342,14 +343,23 @@ public class ChessBoardPanel extends JPanel {
             gameFrame.hideGiveUpOption(); // 确保认输按钮隐藏
         }
 
-        if (eatintCount == 1 && mustDie == 0 && isInCheckCount == 0) {
+        if (eatintCount == 1 && mustDie == 0 && isInCheckCount == 0 && justMoveCount == 0) {
             AudioPlayer.playSound("src/main/resources/Audio/吃.wav");
         }
-        if (eatintCount == 1 && mustDie == 0 && isInCheckCount == 1) {
+        if (eatintCount == 1 && mustDie == 0 && isInCheckCount == 1 && justMoveCount == 0) {
             AudioPlayer.playSound("src/main/resources/Audio/将军.wav");
         }
-        if (eatintCount == 1 && mustDie == 1 && isInCheckCount == 1) {
+        if (eatintCount == 0 && mustDie == 0 && isInCheckCount == 1 && justMoveCount == 1) {
+            AudioPlayer.playSound("src/main/resources/Audio/将军.wav");
+        }
+        if (eatintCount == 1 && mustDie == 1 && isInCheckCount == 1 && justMoveCount == 0) {
             AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
+        }
+        if (eatintCount == 0 && mustDie == 1 && isInCheckCount == 1 && justMoveCount == 1) {
+            AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
+        }
+        if (eatintCount == 0 && mustDie == 0 && isInCheckCount == 0 && justMoveCount == 1) {
+            AudioPlayer.playSound("src/main/resources/Audio/落子.wav");
         }
     }
 
