@@ -270,7 +270,7 @@ public class LoginFrame extends JFrame{
             gameFrame.getStartbutton().setEnabled(true);
             gameFrame.getStartbutton().setText("点击开始");
             gameFrame.getRestartButton().setEnabled(false);
-            gameFrame.getBoardPanel().setGameInteractionEnabled(false);
+            gameFrame.getBoardPanel().setGameInteractionEnabled(true);
             gameFrame.getEndUpPeaceButton().setEnabled(true);
             gameFrame.getTakeBackAMove().setEnabled(true);
             gameFrame.repaint(); // Force GameFrame to redraw everything
@@ -334,7 +334,6 @@ public class LoginFrame extends JFrame{
                 model.removeLastMove();
                 currentCamp.returnTurn();
                 boardPanel.setNewGameModel(model, currentCamp);
-                gameFrame.getBoardPanel().setGameInteractionEnabled(true);
                 gameFrame.updateStatusMessage("悔棋成功！", Color.BLUE, false);
                 gameFrame.repaint();
             } else {
@@ -346,8 +345,8 @@ public class LoginFrame extends JFrame{
             }
             if (!gameFrame.getEndUpPeaceButton().isEnabled()) {
                 gameFrame.getEndUpPeaceButton().setEnabled(true);
-                gameFrame.getBoardPanel().setGameInteractionEnabled(true);
             }
+            gameFrame.getBoardPanel().setGameInteractionEnabled(true);
             gameFrame.refreshLastMoveVisuals();
             AudioPlayer.playSound("src/main/resources/Audio/悔棋.WAV");
             gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());

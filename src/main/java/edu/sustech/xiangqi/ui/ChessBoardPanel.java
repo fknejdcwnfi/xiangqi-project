@@ -10,9 +10,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
-
-
-
 public class ChessBoardPanel extends JPanel {
     private ChessBoardModel model;
     /**
@@ -37,8 +34,6 @@ public class ChessBoardPanel extends JPanel {
     private CurrentCamp currentCamp;
 
     private MoveEveryStep lastMove = null;
-
-    private boolean isGameOver=false;
 
     //调用那个检测下一步的红圈标记方法。
     private java.util.List<Point> legalMoves = new ArrayList<>();
@@ -85,9 +80,7 @@ public class ChessBoardPanel extends JPanel {
     public void setGameInteractionEnabled(boolean enabled) {
 
         String bgmPath="src/main/resources/Audio/" + "斗地主.wav";
-        if (isGameOver) {
-            return;
-        }
+
         if (enabled) {
             // 启动循环音效（单例防止叠加）
             AudioPlayer.playLoopingSound(bgmPath);
@@ -290,14 +283,14 @@ public class ChessBoardPanel extends JPanel {
         if (!hasMoves) {
             String message;
             Color color = Color.BLUE;
+            this.setGameInteractionEnabled(false);
             if (inCheck) {
                 // Checkmate: The previous player wins
-                isGameOver = true;
-                //AudioPlayer.stopAllLoopingSounds();
-                setGameInteractionEnabled(false);
+                //isGameOver = true;
                 String winner = currentCamp.isRedTurn() ? "黑方" : "红方";
                 String loser = currentCamp.isRedTurn() ? "红方" : "黑方";
                 message = winner + "将死" + loser;
+               ;
                 if (currentCamp.isRedTurn()) {
                     gameFrame.addBlackCampScore();
                     gameFrame.updateScoreLabel();
@@ -309,10 +302,6 @@ public class ChessBoardPanel extends JPanel {
                 }
             } else {
                 // Stalemate: Draw
-                isGameOver = true;
-                //AudioPlayer.stopAllLoopingSounds();
-                setGameInteractionEnabled(false);
-
                 String winner = currentCamp.isRedTurn() ? "黑方" : "红方";
                 String loser = currentCamp.isRedTurn() ? "红方" : "黑方";
                 message ="困毙：" +  winner + "胜利";
@@ -332,7 +321,6 @@ public class ChessBoardPanel extends JPanel {
             gameFrame.updateStatusMessage(message, Color.RED, true);
             gameFrame.hideGiveUpOption(); // 确保认输按钮隐藏
             gameFrame.getEndUpPeaceButton().setEnabled(false);
-            this.setGameInteractionEnabled(false);
 
         } else if (inCheck) {
             Color checkColor = currentCamp.isRedTurn() ? Color.RED : Color.BLACK;
@@ -354,9 +342,11 @@ public class ChessBoardPanel extends JPanel {
         }
         if (eatintCount == 1 && mustDie == 1 && isInCheckCount == 1 && justMoveCount == 0) {
             AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
+            this.setGameInteractionEnabled(false);
         }
         if (eatintCount == 0 && mustDie == 1 && isInCheckCount == 1 && justMoveCount == 1) {
             AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
+            this.setGameInteractionEnabled(false);
         }
         if (eatintCount == 0 && mustDie == 0 && isInCheckCount == 0 && justMoveCount == 1) {
             AudioPlayer.playSound("src/main/resources/Audio/落子.wav");
