@@ -264,13 +264,12 @@ public class LoginFrame extends JFrame{
             PlayGameSession newActiveSession = new PlayGameSession(gameFrame.getActiveSession().getPlayerNameID());//全新棋盘和红棋子先走
             gameFrame.setActiveSessionModel(newActiveSession);
             gameFrame.setCurrentCamp(newActiveSession.getCurrentCamp());
-            //Update the ChessBoardPanel's reference to the new model and camp.
             gameFrame.getBoardPanel().setNewGameModel(newActiveSession.getChessBoardModel(), newActiveSession.getCurrentCamp());
             gameFrame.refreshLastMoveVisuals();
             gameFrame.getStartbutton().setEnabled(true);
             gameFrame.getStartbutton().setText("点击开始");
             gameFrame.getRestartButton().setEnabled(false);
-            gameFrame.getBoardPanel().setGameInteractionEnabled(true);
+            gameFrame.getBoardPanel().setGameInteractionEnabled(false);
             gameFrame.getEndUpPeaceButton().setEnabled(true);
             gameFrame.getTakeBackAMove().setEnabled(true);
             gameFrame.repaint(); // Force GameFrame to redraw everything
@@ -305,7 +304,6 @@ public class LoginFrame extends JFrame{
         // 4. Save and Exit button
         gameFrame.getSaveAndOutButton().addActionListener(e->{
             AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
-            // using GamePersistence.saveGame(gameFrame.activeSession)
             gameFrame.setVisible(false);
             gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         });
@@ -346,6 +344,7 @@ public class LoginFrame extends JFrame{
             if (!gameFrame.getEndUpPeaceButton().isEnabled()) {
                 gameFrame.getEndUpPeaceButton().setEnabled(true);
             }
+            gameFrame.getGiveUpButton().setVisible(false);
             gameFrame.getBoardPanel().setGameInteractionEnabled(true);
             gameFrame.refreshLastMoveVisuals();
             AudioPlayer.playSound("src/main/resources/Audio/悔棋.WAV");

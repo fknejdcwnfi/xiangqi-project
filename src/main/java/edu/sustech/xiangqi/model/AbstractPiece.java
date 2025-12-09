@@ -16,7 +16,6 @@ public abstract class AbstractPiece implements Serializable,Cloneable,Comparable
         this.col = col;
         this.isRed = isRed;
         this.value = value;
-        this.totalMoveCount = value;
     }
 
     public String getName() {
@@ -82,7 +81,7 @@ public abstract class AbstractPiece implements Serializable,Cloneable,Comparable
     }
 
     public void setTotalMoveCount(int totalMoveCount) {
-        this.totalMoveCount = totalMoveCount;
+        this.totalMoveCount = totalMoveCount +  value;
     }
     public int getTotalMoveCount() {
         return totalMoveCount;

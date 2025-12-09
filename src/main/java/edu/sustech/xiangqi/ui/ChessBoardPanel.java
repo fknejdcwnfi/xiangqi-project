@@ -331,6 +331,7 @@ public class ChessBoardPanel extends JPanel {
             Color checkColor = currentCamp.isRedTurn() ? Color.RED : Color.BLACK;
             gameFrame.updateStatusMessage(currentCampName + "被将军！", Color.RED, true);
             gameFrame.showGiveUpOption(currentCampName);
+            gameFrame.getEndUpPeaceButton().setEnabled(false);
         } else {
             updateTurnLabel(); // 更新回合文字
             gameFrame.hideGiveUpOption(); // 确保认输按钮隐藏
@@ -341,9 +342,11 @@ public class ChessBoardPanel extends JPanel {
         }
         if (eatintCount == 1 && mustDie == 0 && isInCheckCount == 1 && justMoveCount == 0) {
             AudioPlayer.playSound("src/main/resources/Audio/将军.wav");
+            gameFrame.getEndUpPeaceButton().setEnabled(false);
         }
         if (eatintCount == 0 && mustDie == 0 && isInCheckCount == 1 && justMoveCount == 1) {
             AudioPlayer.playSound("src/main/resources/Audio/将军.wav");
+            gameFrame.getEndUpPeaceButton().setEnabled(false);
         }
         if (eatintCount == 1 && mustDie == 1 && isInCheckCount == 1 && justMoveCount == 0) {
             AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
