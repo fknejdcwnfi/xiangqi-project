@@ -443,5 +443,32 @@ public class LoginFrame extends JFrame{
                 }
             }
         });
+
+        gameFrame.getAIModel().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
+                if (gameFrame.getAIModel().getText().equals("黑方人机模式")) {
+                    // 切换到：AI 自动落子模式 (人机模式)
+                    gameFrame.getBoardPanel().setUseAI(true);
+                    gameFrame.getBoardPanel().setShowWarning(false); // 关闭警告提示
+                    gameFrame.getAIModel().setText("停止人机模式");
+
+                    // 启动 AI 自动落子（如果当前是黑方回合）
+                    if (gameFrame.getBoardPanel().getInteractionEnabled()) {
+                        gameFrame.getBoardPanel().setGameInteractionEnabled(true);
+                    }
+                } else {
+                    // 切换到：人类对战模式 (关闭 AI 自动落子)
+                    gameFrame.getBoardPanel().setUseAI(false);
+                    gameFrame.getBoardPanel().setShowWarning(true); // 开启警告提示
+                    gameFrame.getAIModel().setText("黑方人机模式");
+
+                    // 重新启动警告计时器（如果游戏在进行）
+                    if (gameFrame.getBoardPanel().getInteractionEnabled()) {
+                        gameFrame.getBoardPanel().setGameInteractionEnabled(true);
+                    }
+                }
+            }
+        });
     }
 }

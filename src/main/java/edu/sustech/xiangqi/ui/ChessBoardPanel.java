@@ -41,6 +41,8 @@ public class ChessBoardPanel extends JPanel {
     private java.util.List<Point> autoMoves = new ArrayList<>();
     private java.util.List<Point> autoEat = new ArrayList<>();
     private Timer idleTimer;
+    private boolean useAI = false;
+    private boolean showWarning = true;
 
     private GameFrame gameFrame;
 
@@ -51,8 +53,14 @@ public class ChessBoardPanel extends JPanel {
         // 1. 设置布局为 null，这样我们可以用 setBounds 随意放置 Label
         this.setLayout(null);
 
-        idleTimer = new Timer(5000, e -> triggerAutoWarning());
-        idleTimer.setRepeats(false);
+        this.idleTimer = new Timer(5000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                triggerAutoWarning();
+            }
+        });
+        this.idleTimer.setRepeats(false);
+
 
         setPreferredSize(new Dimension(
                 CELL_SIZE * (ChessBoardModel.getCols() - 1) + MARGIN * 2,
@@ -91,16 +99,29 @@ public class ChessBoardPanel extends JPanel {
             // 启动循环音效（单例防止叠加）
             AudioPlayer.playLoopingSound(bgmPath);
         } else {
+            if (idleTimer.isRunning()) {
+                idleTimer.stop();
+            }
         }
-        this.interactionEnabled = enabled; // 使用 this
+        this.interactionEnabled = enabled;
+
         if (interactionEnabled) {
             // 游戏开始
             updateTurnLabel();   // 显示 "当前回合：红方"
             gameFrame.startGameTimer();
-            idleTimer.start();
+            if (useAI) {
+                idleTimer.stop();
+                if (!currentCamp.isRedTurn()) {
+                    autoAIdoing();
+                }
+            } else  {
+                idleTimer.restart();
+            }
         } else {
-            gameFrame.stopGameTimer();
-            idleTimer.stop();
+              gameFrame.stopGameTimer();
+                if (idleTimer.isRunning()) {
+                    idleTimer.stop();
+                }
             // 禁用时
             if (this.model.getMoveHistory().isEmpty()) {
                 gameFrame.updateStatusMessage("请点击开始", Color.BLUE, true);
@@ -117,8 +138,10 @@ public class ChessBoardPanel extends JPanel {
             return;
         }
 
-        idleTimer.stop();
-        idleTimer.restart();
+        if (!useAI) {
+            idleTimer.stop();
+//            idleTimer.restart();
+        }
 
         int col = Math.round((float) (x - MARGIN) / CELL_SIZE);
         int row = Math.round((float) (y - MARGIN) / CELL_SIZE);
@@ -140,6 +163,10 @@ public class ChessBoardPanel extends JPanel {
                 if (piece.isRed() == currentCamp.isRedTurn()) {
                     selectedPiece = piece; // 选中成功
                     calculateLegalMoves(selectedPiece);
+
+                    if (!useAI) {
+                        idleTimer.restart();
+                    }
                 }
             }
 
@@ -272,7 +299,11 @@ public class ChessBoardPanel extends JPanel {
                 if (!messageShown) {//Only update turn label if we didn't just show a warning
                     updateTurnLabel();
                 }
-
+                if (useAI && !currentCamp.isRedTurn()) {
+                    autoAIdoing();
+                } else if (!useAI) {
+                    idleTimer.restart();
+                }
             }
         }
         // 处理完点击事件后，需要重新绘制ui界面才能让界面上的棋子“移动”起来
@@ -781,34 +812,102 @@ public class ChessBoardPanel extends JPanel {
         g2d.drawOval(eX - HIGHLIGHT_RADIUS, eY - HIGHLIGHT_RADIUS, DIAMETER, DIAMETER);
     }
 
+
+    private void autoAIdoing() {
+        if (!useAI) {
+            return;
+        }
+
+        // 仅在黑方回合时自动执行
+        if (!currentCamp.isRedTurn()) {
+            System.out.println("AI is thinking...");
+            // 1. Ask AutoWarning for the best PIECE to move
+            AbstractPiece bestPiece = AutoWarning.warningPiece(model, currentCamp);
+
+            if (bestPiece != null) {
+                // 2. Ask AutoWarning for the best MOVE for that piece
+                java.util.List<Point> bestMoves = AutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
+
+                if (!bestMoves.isEmpty()) {
+                    // **正确的 AI 自动落子逻辑：模拟两次点击，利用 handleMouseClick 完成所有游戏逻辑**
+
+                    // 1. 获取最佳目标位置（注意：您代码中的 Point.x 是 row，Point.y 是 col）
+                    int Row = bestMoves.get(0).x;
+                    int Col = bestMoves.get(0).y;
+
+                    // 2. 模拟第一次点击：选中棋子 (bestPiece)
+                    // 将棋子的 row/col 坐标转换为像素坐标
+                    int startPixelX = getX(bestPiece.getCol());
+                    int startPixelY = getY(bestPiece.getRow());
+
+                    // 执行第一次点击（选中 bestPiece）
+                    handleMouseClick(startPixelX, startPixelY);
+
+                    // 3. 模拟第二次点击：移动到目标位置 (destRow, destCol)
+                    // 将目标 row/col 坐标转换为像素坐标
+                    int destPixelX = getX(Col);
+                    int destPixelY = getY(Row);
+
+                    // 执行第二次点击（执行移动/吃子，并处理回合切换、将军/绝杀等所有逻辑）
+                    handleMouseClick(destPixelX, destPixelY);
+
+                    // 提示 AI 已移动
+                    gameFrame.updateStatusMessage("AI (黑方) 自动落子", Color.MAGENTA, true);
+
+                    // **（原有的 highLight/sound 逻辑被 handleMouseClick 中的完整逻辑取代）**
+                }
+            }
+        }
+    }
+
+    public boolean getUseAI () {
+        return useAI;
+    }
+    public void setUseAI(boolean useAI) {
+        this.useAI = useAI;
+    }
+    public void setShowWarning(boolean showWarning) {
+        this.showWarning = showWarning;
+        repaint();
+    }
+
     private void triggerAutoWarning() {
-        if (!interactionEnabled) return; // Don't warn if game isn't running
-        if (selectedPiece != null) return; // Don't warn if user is already holding a piece
+        // 1. 检查前提条件：游戏运行中，非 AI 模式，警告功能开启
+        if (!interactionEnabled) return;
+        if (useAI || !showWarning) return;
 
-        System.out.println("5 seconds inactivity detected - Triggering Auto Warning...");
+        // 如果计时器到期时用户已选中棋子，我们清除选中状态并退出，避免干扰用户当前选择。
+        if (selectedPiece != null) {
+            selectedPiece = null;
+            legalMoves.clear();
+            repaint();
+            return;
+        }
 
-        // 1. Ask AutoWarning for the best PIECE
+        // 当前回合的玩家就是需要警告的玩家
+        boolean isCurrentPlayerRed = currentCamp.isRedTurn();
+        String player = isCurrentPlayerRed ? "红方" : "黑方";
+
+        System.out.println("5 seconds inactivity detected - Triggering Auto Warning for " + player + "...");
+
+        // 2. 询问 AutoWarning 获取最佳棋子和走法
         AbstractPiece bestPiece = AutoWarning.warningPiece(model, currentCamp);
 
         if (bestPiece != null) {
-            // 2. Ask AutoWarning for the best MOVE for that piece
-            // We pass 'this.autoMoves' and 'this.autoEat' as buffers, just like your logic requires
             java.util.List<Point> bestMoves = AutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
 
             if (!bestMoves.isEmpty()) {
-                // 3. Highlight the piece (Simulate selection)
+                // 3. 模拟选中最佳棋子
                 this.selectedPiece = bestPiece;
 
-                // 4. Highlight ONLY the suggested move
-                // We overwrite legalMoves so only the "Best" move is shown with the blue circle/aim icon
+                // 4. 计算该棋子的所有合法走法（用于显示蓝色或红色圈）
+                calculateLegalMoves(bestPiece);
                 this.legalMoves.clear();
                 this.legalMoves.addAll(bestMoves);
+                // 6. 提示并重绘
+                gameFrame.updateStatusMessage(player + "：建议走法已显示", Color.MAGENTA, true);
+                AudioPlayer.playSound("src/main/resources/Audio/落子.wav");
 
-                // 5. Play a sound or show status to alert user
-                gameFrame.updateStatusMessage("建议走法已显示", Color.MAGENTA, true);
-                AudioPlayer.playSound("src/main/resources/Audio/落子.wav"); // Optional prompt sound
-
-                // 6. Redraw the board to show the highlights
                 repaint();
             }
         }

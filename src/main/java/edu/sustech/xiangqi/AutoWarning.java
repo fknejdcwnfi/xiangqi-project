@@ -8,6 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AutoWarning {
+    private static final int CHECK_BONUS = 2000;
+    private static final int CAPTURE_FLAT_BONUS = 500;
+    private static final int ESCAPE_THREAT_BONUS = 500;
+    private static final int MATE_SCORE = 15000;
+    private static final int BASIC_MOVE_SCORE = 100;
+
+
     public static AbstractPiece warningPiece(ChessBoardModel chessBoardModel, CurrentCamp camp) {//the camp refers to the user who is now to move the piece
         List<AbstractPiece> myPieces = new ArrayList<>();
         for (AbstractPiece piece : chessBoardModel.getPieces()) {
@@ -68,11 +75,12 @@ public class AutoWarning {
                     currentModel.movePieceForce(currentPieceInCopy, row, col);
                 }
 
-                // 3. Discard if it results in self-check
+                // 3. Discard if it results in self-check (Crucial for General safety)
                 if (currentModel.isInCheck(currentCamp.isRedTurn())) {
                     continue;
                 }
 
+                // 4. Evaluate the move
                 int moveScore = evaluateSingleMove(chessBoardModel, abstractPiece, row, col, currentCamp);
 
                 // 5. Check if this is the best move found so far
@@ -103,9 +111,8 @@ public class AutoWarning {
     }
 
     public static int pieceTotalMoveCount(ChessBoardModel chessBoardModel, AbstractPiece abstractPiece, CurrentCamp currentCamp) {
-        int totalScore = 0;
+        // This method is used by warningPiece to find the best piece. Its scoring logic must be consistent.
         int maxMoveScore = Integer.MIN_VALUE;
-
         boolean isCurrentPlayerRed = currentCamp.isRedTurn();
 
         for (int row = 0; row < chessBoardModel.getRows(); row++) {
@@ -114,11 +121,13 @@ public class AutoWarning {
                 if ((!abstractPiece.canMoveTo(row, col, chessBoardModel)) || (target != null && target.isRed() == isCurrentPlayerRed)) {
                     continue;
                 }
+
+                // --- Simulation Start ---
                 ChessBoardModel currentModel = chessBoardModel.deepCopy();
                 AbstractPiece currentPieceInCopy = currentModel.getPieceAt(abstractPiece.getRow(), abstractPiece.getCol());
 
                 if (target != null) {
-                    AbstractPiece targetPieceInCopy = chessBoardModel.getPieceAt(row, col);
+                    AbstractPiece targetPieceInCopy = currentModel.getPieceAt(row, col);
                     if (targetPieceInCopy != null) {
                         currentModel.remove(targetPieceInCopy);
                     }
@@ -126,48 +135,15 @@ public class AutoWarning {
                 if (currentPieceInCopy != null) {
                     currentModel.movePieceForce(currentPieceInCopy, row, col);
                 }
+                // --- Simulation End ---
 
+                // Discard move if it results in self-check
                 if (currentModel.isInCheck(currentCamp.isRedTurn())) {
                     continue;
                 }
 
-                int moveScore = 0;
-
-                if (target != null) {
-                    int captureValue = target.getValue();
-                    if (captureValue == 10000) {
-                        moveScore = moveScore + 15000;
-                    } else {
-                        moveScore = moveScore + captureValue;
-                    }
-                } else {
-                    moveScore = moveScore + 100;
-                }
-
-                int attackPenalty = 0;
-                for (AbstractPiece opponentPiece : currentModel.getPieces()) {
-                    if (opponentPiece != null && opponentPiece.isRed() != isCurrentPlayerRed) {
-                        if (opponentPiece.canMoveTo(row, col, currentModel)) {
-                            attackPenalty += 1500;
-                        }
-                    }
-                }
-
-                int helpSocre = 0;
-                for (AbstractPiece opponentPiece : chessBoardModel.getPieces()) {
-                    if (opponentPiece != null && opponentPiece.isRed() != isCurrentPlayerRed) {
-                        if (opponentPiece.canMoveTo(abstractPiece.getRow(), abstractPiece.getCol(), currentModel)) {
-                            helpSocre += 1500;
-                        }
-                    }
-                }
-                moveScore = moveScore - attackPenalty +  helpSocre;
-
-
-                if (currentModel.isInCheck(!isCurrentPlayerRed)) {
-                    moveScore += 1400;
-                }
-
+                // Use the shared scoring logic
+                int moveScore = evaluateSingleMove(chessBoardModel, abstractPiece, row, col, currentCamp);
 
                 if (moveScore > maxMoveScore) {
                     maxMoveScore = moveScore;
@@ -176,20 +152,18 @@ public class AutoWarning {
         }
 
         // If no legal moves, return a huge penalty.
-        return (maxMoveScore <= 0) ? -5000 : maxMoveScore;
+        return (maxMoveScore == Integer.MIN_VALUE) ? -5000 : maxMoveScore;
     }
 
     private static int evaluateSingleMove(ChessBoardModel chessBoardModel, AbstractPiece abstractPiece, int toRow, int toCol, CurrentCamp currentCamp) {
         int score = 0;
         boolean isCurrentPlayerRed = currentCamp.isRedTurn();
-
-
-        ChessBoardModel currentModel = chessBoardModel.deepCopy();
-
-        AbstractPiece currentPieceInCopy = currentModel.getPieceAt(abstractPiece.getRow(), abstractPiece.getCol());
-        AbstractPiece targetPieceInCopy = currentModel.getPieceAt(toRow, toCol);
         AbstractPiece originalTarget = chessBoardModel.getPieceAt(toRow, toCol); // Reference to the piece being captured
 
+        // 1. --- Simulate the move to calculate post-move scores ---
+        ChessBoardModel currentModel = chessBoardModel.deepCopy();
+        AbstractPiece currentPieceInCopy = currentModel.getPieceAt(abstractPiece.getRow(), abstractPiece.getCol());
+        AbstractPiece targetPieceInCopy = currentModel.getPieceAt(toRow, toCol);
 
         if (targetPieceInCopy != null) {
             currentModel.remove(targetPieceInCopy);
@@ -198,44 +172,54 @@ public class AutoWarning {
             currentModel.movePieceForce(currentPieceInCopy, toRow, toCol);
         }
 
-
         // 2. --- Calculate Immediate Rewards (Benefits) ---
 
-        // a. Capture Reward
+        // a. Capture Reward (EAT MORE PIECES CHANCE)
         if (originalTarget != null) {
             int capturedValue = originalTarget.getValue();
             if (capturedValue == 10000) {
                 // Huge reward for capturing the General/King (Checkmate opportunity)
-                score += 15000;
+                score += MATE_SCORE;
             } else {
-                // Reward for capturing a regular piece
-                score += capturedValue;
+                // Reward for capturing a regular piece + flat bonus
+                score += capturedValue + CAPTURE_FLAT_BONUS; // Enhanced capture priority
             }
         } else {
-            // Basic Mobility Reward (Slightly reward any safe, non-capture move)
-            score += 100;
+            // Basic Mobility Reward
+            score += BASIC_MOVE_SCORE;
         }
 
-        // b. Check Reward
+        // b. Check Reward (BETTER GENERAL THREAT MANAGEMENT)
         // Check if the move puts the opponent in check
         if (currentModel.isInCheck(!isCurrentPlayerRed)) {
-            score += 1400;
+            score += CHECK_BONUS; // Increased check value
         }
 
+
+        // 3. --- Safety and Positional Factors ---
+
+        // c. Attacked Destination Penalty (Safety against loss)
+        int MOVING_PIECE_VALUE = (currentPieceInCopy != null) ? currentPieceInCopy.getValue() : 0;
         int attackPenalty = 0;
+
+        // Find the value of the strongest piece attacking the destination square
         for (AbstractPiece opponentPiece : currentModel.getPieces()) {
             if (opponentPiece != null && opponentPiece.isRed() != isCurrentPlayerRed) {
                 if (opponentPiece.canMoveTo(toRow, toCol, currentModel)) {
-                    attackPenalty += 1500;
+                    // Penalty is the full value of the moving piece if it's attacked
+                    attackPenalty = MOVING_PIECE_VALUE;
+                    break;
                 }
             }
         }
 
+        // d. Escape Threat Reward (BETTER GENERAL THREAT MANAGEMENT: Moving piece out of danger)
         int helpSocre = 0;
         for (AbstractPiece opponentPiece : chessBoardModel.getPieces()) {
             if (opponentPiece != null && opponentPiece.isRed() != isCurrentPlayerRed) {
-                if (opponentPiece.canMoveTo(abstractPiece.getRow(), abstractPiece.getCol(), currentModel)) {
-                    helpSocre += 1500;
+                // Check if the opponent could attack the STARTING square
+                if (opponentPiece.canMoveTo(abstractPiece.getRow(), abstractPiece.getCol(), chessBoardModel)) {
+                    helpSocre += ESCAPE_THREAT_BONUS; // Reduced bonus for escaping attack
                 }
             }
         }
@@ -243,6 +227,7 @@ public class AutoWarning {
         score = score - attackPenalty +  helpSocre;
 
 
+        // e. Pawn Advancement (Positional)
         if (currentPieceInCopy != null && currentPieceInCopy.getName().equals("Pawn")) {
             // Assuming river is at row 5 for Red (top side) and row 4 for Black (bottom side)
             int riverRow = isCurrentPlayerRed ? 4 : 5;
@@ -250,7 +235,6 @@ public class AutoWarning {
                 score += 200;
             }
         }
-
         return score;
     }
 }

@@ -26,6 +26,7 @@ public class GameFrame extends JFrame {
     private JButton takeBackAMove;
     private JButton giveUpButton;
     private JButton endUpPeaceButton;
+    private JButton AIModel;
 
     // UI Components - Labels
     private JLabel timerLabel;
@@ -261,6 +262,9 @@ public class GameFrame extends JFrame {
         takeBackAMove = new AncientButton("悔一下棋");
         takeBackAMove.setPreferredSize(BUTTON_SIZE);
 
+        AIModel = new AncientButton("黑方人机模式");
+        AIModel.setPreferredSize(BUTTON_SIZE);
+
         giveUpButton = new AncientButton("认输");
         giveUpButton.setPreferredSize(BUTTON_SIZE);
         giveUpButton.setVisible(false);
@@ -288,6 +292,7 @@ public class GameFrame extends JFrame {
         buttonContainer.add(restartButton);
         buttonContainer.add(endUpPeaceButton);
         buttonContainer.add(giveUpButton);
+        buttonContainer.add(AIModel);
 
         rightPanel.add(buttonContainer);
         return rightPanel;
@@ -305,6 +310,7 @@ public class GameFrame extends JFrame {
     public JButton getTakeBackAMove() { return takeBackAMove; }
     public JButton getChangeinformation() { return this.changeinformation; }
     public JButton getSaveAndOutButton() { return this.saveAndOutButton; }
+    public JButton getAIModel() { return this.AIModel; }
     public PlayGameSession getActiveSession() { return this.activeSession; }
 
     public void setActiveSessionModel(PlayGameSession newActiveSession) {

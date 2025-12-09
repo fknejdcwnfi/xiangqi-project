@@ -115,8 +115,6 @@ public class AudioPlayer {
         }
     }
 
-
-
     // 停止所有循环音效（比如游戏获胜时）
     public static void stopAllLoopingSounds() {
         for (Clip clip : loopingClips.values()) {
