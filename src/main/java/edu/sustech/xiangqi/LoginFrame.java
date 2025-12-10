@@ -266,6 +266,18 @@ public class LoginFrame extends JFrame{
             gameFrame.setCurrentCamp(newActiveSession.getCurrentCamp());
             gameFrame.getBoardPanel().setNewGameModel(newActiveSession.getChessBoardModel(), newActiveSession.getCurrentCamp());
             gameFrame.refreshLastMoveVisuals();
+            if (!gameFrame.getEndUpPeaceButton().isEnabled()) {
+                gameFrame.getEndUpPeaceButton().setEnabled(true);
+            }
+            if (gameFrame.getAIModel().getText().equals("停止人机模式")) {
+                gameFrame.getBoardPanel().setUseAI(false);
+                gameFrame.getAIModel().setText("黑方人机模式");
+
+                // 重新启动警告计时器（如果游戏在进行）
+                if (gameFrame.getBoardPanel().getInteractionEnabled()) {
+                    gameFrame.getBoardPanel().setGameInteractionEnabled(true);
+                }
+            }
             gameFrame.getStartbutton().setEnabled(true);
             gameFrame.getStartbutton().setText("点击开始");
             gameFrame.getRestartButton().setEnabled(false);
@@ -343,6 +355,15 @@ public class LoginFrame extends JFrame{
             }
             if (!gameFrame.getEndUpPeaceButton().isEnabled()) {
                 gameFrame.getEndUpPeaceButton().setEnabled(true);
+            }
+            if (gameFrame.getAIModel().getText().equals("停止人机模式")) {
+                gameFrame.getBoardPanel().setUseAI(false);
+                gameFrame.getAIModel().setText("黑方人机模式");
+
+                // 重新启动警告计时器（如果游戏在进行）
+                if (gameFrame.getBoardPanel().getInteractionEnabled()) {
+                    gameFrame.getBoardPanel().setGameInteractionEnabled(true);
+                }
             }
             gameFrame.getGiveUpButton().setVisible(false);
             gameFrame.getBoardPanel().setGameInteractionEnabled(true);
@@ -450,7 +471,6 @@ public class LoginFrame extends JFrame{
                 if (gameFrame.getAIModel().getText().equals("黑方人机模式")) {
                     // 切换到：AI 自动落子模式 (人机模式)
                     gameFrame.getBoardPanel().setUseAI(true);
-                    gameFrame.getBoardPanel().setShowWarning(false); // 关闭警告提示
                     gameFrame.getAIModel().setText("停止人机模式");
 
                     // 启动 AI 自动落子（如果当前是黑方回合）
@@ -460,7 +480,6 @@ public class LoginFrame extends JFrame{
                 } else {
                     // 切换到：人类对战模式 (关闭 AI 自动落子)
                     gameFrame.getBoardPanel().setUseAI(false);
-                    gameFrame.getBoardPanel().setShowWarning(true); // 开启警告提示
                     gameFrame.getAIModel().setText("黑方人机模式");
 
                     // 重新启动警告计时器（如果游戏在进行）

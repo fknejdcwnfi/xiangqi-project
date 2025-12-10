@@ -42,7 +42,6 @@ public class ChessBoardPanel extends JPanel {
     private java.util.List<Point> autoEat = new ArrayList<>();
     private Timer idleTimer;
     private boolean useAI = false;
-    private boolean showWarning = true;
 
     private GameFrame gameFrame;
 
@@ -59,8 +58,7 @@ public class ChessBoardPanel extends JPanel {
                 triggerAutoWarning();
             }
         });
-        this.idleTimer.setRepeats(false);
-
+        this.idleTimer.setRepeats(true);
 
         setPreferredSize(new Dimension(
                 CELL_SIZE * (ChessBoardModel.getCols() - 1) + MARGIN * 2,
@@ -110,8 +108,10 @@ public class ChessBoardPanel extends JPanel {
             updateTurnLabel();   // 显示 "当前回合：红方"
             gameFrame.startGameTimer();
             if (useAI) {
-                idleTimer.stop();
-                if (!currentCamp.isRedTurn()) {
+                if (currentCamp.isRedTurn()) {
+                    idleTimer.restart();
+                } else {
+                    idleTimer.stop();
                     autoAIdoing();
                 }
             } else  {
@@ -164,7 +164,7 @@ public class ChessBoardPanel extends JPanel {
                     selectedPiece = piece; // 选中成功
                     calculateLegalMoves(selectedPiece);
 
-                    if (!useAI) {
+                    if (currentCamp.isRedTurn()) {
                         idleTimer.restart();
                     }
                 }
@@ -299,9 +299,14 @@ public class ChessBoardPanel extends JPanel {
                 if (!messageShown) {//Only update turn label if we didn't just show a warning
                     updateTurnLabel();
                 }
-                if (useAI && !currentCamp.isRedTurn()) {
-                    autoAIdoing();
-                } else if (!useAI) {
+                if (useAI) {
+                    if (!currentCamp.isRedTurn()) {
+                        idleTimer.stop();
+                        autoAIdoing();
+                    } else {
+                        idleTimer.restart();
+                    }
+                } else {
                     idleTimer.restart();
                 }
             }
@@ -837,24 +842,22 @@ public class ChessBoardPanel extends JPanel {
 
                     // 2. 模拟第一次点击：选中棋子 (bestPiece)
                     // 将棋子的 row/col 坐标转换为像素坐标
-                    int startPixelX = getX(bestPiece.getCol());
-                    int startPixelY = getY(bestPiece.getRow());
+                    int startX = getX(bestPiece.getCol());
+                    int startY = getY(bestPiece.getRow());
 
                     // 执行第一次点击（选中 bestPiece）
-                    handleMouseClick(startPixelX, startPixelY);
+                    handleMouseClick(startX, startY);
 
-                    // 3. 模拟第二次点击：移动到目标位置 (destRow, destCol)
-                    // 将目标 row/col 坐标转换为像素坐标
-                    int destPixelX = getX(Col);
-                    int destPixelY = getY(Row);
+
+                    int destX = getX(Col);
+                    int destY = getY(Row);
 
                     // 执行第二次点击（执行移动/吃子，并处理回合切换、将军/绝杀等所有逻辑）
-                    handleMouseClick(destPixelX, destPixelY);
+                    handleMouseClick(destX, destY);
 
                     // 提示 AI 已移动
-                    gameFrame.updateStatusMessage("AI (黑方) 自动落子", Color.MAGENTA, true);
+                    gameFrame.updateStatusMessage(" (黑方) 自动落子", Color.MAGENTA, true);
 
-                    // **（原有的 highLight/sound 逻辑被 handleMouseClick 中的完整逻辑取代）**
                 }
             }
         }
@@ -866,15 +869,15 @@ public class ChessBoardPanel extends JPanel {
     public void setUseAI(boolean useAI) {
         this.useAI = useAI;
     }
-    public void setShowWarning(boolean showWarning) {
-        this.showWarning = showWarning;
-        repaint();
-    }
 
     private void triggerAutoWarning() {
+        // 当前回合的玩家就是需要警告的玩家
+        boolean isCurrentPlayerRed = currentCamp.isRedTurn();
+        String player = isCurrentPlayerRed ? "红方" : "黑方";
+
         // 1. 检查前提条件：游戏运行中，非 AI 模式，警告功能开启
         if (!interactionEnabled) return;
-        if (useAI || !showWarning) return;
+        if ( useAI && !currentCamp.isRedTurn()) return;
 
         // 如果计时器到期时用户已选中棋子，我们清除选中状态并退出，避免干扰用户当前选择。
         if (selectedPiece != null) {
@@ -884,9 +887,6 @@ public class ChessBoardPanel extends JPanel {
             return;
         }
 
-        // 当前回合的玩家就是需要警告的玩家
-        boolean isCurrentPlayerRed = currentCamp.isRedTurn();
-        String player = isCurrentPlayerRed ? "红方" : "黑方";
 
         System.out.println("5 seconds inactivity detected - Triggering Auto Warning for " + player + "...");
 
