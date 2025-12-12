@@ -1,5 +1,5 @@
 package edu.sustech.xiangqi.ui;
-import edu.sustech.xiangqi.AutoWarning;
+import edu.sustech.xiangqi.AIAutoWarning;
 import edu.sustech.xiangqi.CurrentCamp;
 import edu.sustech.xiangqi.GameFrame;
 import edu.sustech.xiangqi.MoveEveryStep;
@@ -829,11 +829,11 @@ public class ChessBoardPanel extends JPanel {
         if (!currentCamp.isRedTurn()) {
             System.out.println("AI is thinking...");
             // 1. Ask AutoWarning for the best PIECE to move
-            AbstractPiece bestPiece = AutoWarning.warningPiece(model, currentCamp);
+            AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
 
             if (bestPiece != null) {
                 // 2. Ask AutoWarning for the best MOVE for that piece
-                java.util.List<Point> bestMoves = AutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
+                java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
 
                 if (!bestMoves.isEmpty()) {
                     // **正确的 AI 自动落子逻辑：模拟两次点击，利用 handleMouseClick 完成所有游戏逻辑**
@@ -893,10 +893,10 @@ public class ChessBoardPanel extends JPanel {
         System.out.println("5 seconds inactivity detected - Triggering Auto Warning for " + player + "...");
 
         // 2. 询问 AutoWarning 获取最佳棋子和走法
-        AbstractPiece bestPiece = AutoWarning.warningPiece(model, currentCamp);
+        AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
 
         if (bestPiece != null) {
-            java.util.List<Point> bestMoves = AutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
+            java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
 
             if (!bestMoves.isEmpty()) {
                 // 3. 模拟选中最佳棋子
