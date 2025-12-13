@@ -6,6 +6,7 @@ import edu.sustech.xiangqi.model.AbstractPiece;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 import java.util.ArrayList;
 
 public class ChessBoardPanel extends JPanel {
@@ -32,6 +33,8 @@ public class ChessBoardPanel extends JPanel {
     private CurrentCamp currentCamp;
 
     private MoveEveryStep lastMove = null;
+
+    private boolean isAIThinking = false;
 
     //调用那个检测下一步的红圈标记方法。
     private java.util.List<Point> legalMoves = new ArrayList<>();
@@ -135,9 +138,17 @@ public class ChessBoardPanel extends JPanel {
             return;
         }
 
+        if (isAIThinking) {
+            return;
+        }
+
         if (!useAI) {
-            idleTimer.stop();
-//            idleTimer.restart();
+            idleTimer.restart();
+        } else {
+            // 如果是 AI 模式且轮到红方操作，也重置计时器
+            if (currentCamp.isRedTurn()) {
+                idleTimer.restart();
+            }
         }
 
         int col = Math.round((float) (x - MARGIN) / CELL_SIZE);
@@ -305,20 +316,7 @@ public class ChessBoardPanel extends JPanel {
 
                 if (useAI && currentCamp.isRedTurn()) {
                     if (AIAutoWarning.shouldBlackAISurrender(model, currentCamp)) {
-                        // 黑方投降
-                        String loser = "黑方";
-                        String message = loser + " 自动认输！" ;
-                        gameFrame.addRedCampScore();
-                        gameFrame.updateStatusMessage(message, Color.BLUE, true);
-                        this.setGameInteractionEnabled(false);
-                        gameFrame.hideGiveUpOption();
-                        gameFrame.getEndUpPeaceButton().setEnabled(false);
-                        gameFrame.stopGameTimer();
-                        gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
-                        gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
-                        gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
-                        gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
-                        GamePersistence.saveGame(gameFrame.getActiveSession());
+                        handleAIResign();
                         return; // 提前退出，不再执行后续的将死/困毙判断
                     }
                 }
@@ -843,83 +841,181 @@ public class ChessBoardPanel extends JPanel {
     }
 
 
+    private static class AIResult {
+        AbstractPiece bestPiece;
+        Point targetMove;
+
+        public AIResult(AbstractPiece bestPiece, Point targetMove) {
+            this.bestPiece = bestPiece;
+            this.targetMove = targetMove;
+        }
+    }
+
     private void autoAIdoing() {
         if (!useAI) {
             return;
         }
 
+        if (isAIThinking) {
+            return;
+        }
+
         // 仅在黑方回合时自动执行
         if (!currentCamp.isRedTurn()) {
-            System.out.println("AI is thinking...");
+            System.out.println("AI is thinking");
             // 1. Ask AutoWarning for the best PIECE to move
             AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
 
-            if (bestPiece != null) {
-                // 2. Ask AutoWarning for the best MOVE for that piece
-                java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
+            lockUIForAI();
+            if (!currentCamp.isRedTurn()) {
+                System.out.println("AI is thinking (Background Thread)...");
 
-                if (!bestMoves.isEmpty()) {
-                    // **正确的 AI 自动落子逻辑：模拟两次点击，利用 handleMouseClick 完成所有游戏逻辑**
+                // 1. 锁定界面（禁止点击棋盘、禁用按钮、设置等待光标）
+                lockUIForAI();
 
-                    // 1. 获取最佳目标位置（注意：您代码中的 Point.x 是 row，Point.y 是 col）
-                    int Row = bestMoves.get(0).x;
-                    int Col = bestMoves.get(0).y;
+                // 2. 使用 SwingWorker 在后台执行计算
+                SwingWorker<AIResult, Void> worker = new SwingWorker<>() {
+                    @Override
+                    protected AIResult doInBackground() throws Exception {
+                        // --- 耗时操作：在后台线程运行 AI 算法 ---
+                        // 1. Ask AutoWarning for the best PIECE to move
+                        AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
 
-                    // 2. 模拟第一次点击：选中棋子 (bestPiece)
-                    // 将棋子的 row/col 坐标转换为像素坐标
-                    int startX = getX(bestPiece.getCol());
-                    int startY = getY(bestPiece.getRow());
+                        if (bestPiece != null) {
+                            // 2. Ask AutoWarning for the best MOVE
+                            // 注意：这里使用临时 list，避免修改 UI 线程使用的成员变量
+                            java.util.List<Point> tempAutoMoves = new ArrayList<>();
+                            java.util.List<Point> tempAutoEat = new ArrayList<>();
 
-                    // 执行第一次点击（选中 bestPiece）
-                    handleMouseClick(startX, startY);
+                            java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(
+                                    model, bestPiece, currentCamp, tempAutoMoves, tempAutoEat
+                            );
 
+                            if (!bestMoves.isEmpty()) {
+                                return new AIResult(bestPiece, bestMoves.get(0));
+                            }
+                        }
+                        return null; // 没有找到合法走法
+                    }
 
-                    int destX = getX(Col);
-                    int destY = getY(Row);
+                    @Override
+                    protected void done() {
+                        try {
+                            // --- 恢复界面状态（先恢复，再操作，否则 handleMouseClick 可能会被拦截）---
+                            // 注意：为了安全，我们在下面操作前会先解除 lock，但也要防止操作中出现异常
+                            unlockUIAfterAI();
 
-                    // 执行第二次点击（执行移动/吃子，并处理回合切换、将军/绝杀等所有逻辑）
-                    handleMouseClick(destX, destY);
+                            // --- 安全检查 ---
+                            // 如果在此期间游戏状态发生异常变化（如被强制结束），则不执行落子
+                            if (currentCamp.isRedTurn() || !interactionEnabled) {
+                                return;
+                            }
 
-                    // 提示 AI 已移动
-                    gameFrame.updateStatusMessage(" (黑方) 自动落子", Color.MAGENTA, true);
+                            AIResult result = get(); // 获取 doInBackground 的返回值
 
-                } else {
-                    System.out.println("AI 找不到合法走法，触发游戏结束检查。");
-                    String message = "黑方投降！";
-                    gameFrame.updateStatusMessage(message, Color.BLUE, true);
-                    this.setGameInteractionEnabled(false); // 禁用交互
-                    gameFrame.addRedCampScore();
-                    gameFrame.updateScoreLabel();
-                    repaint();
-                    gameFrame.hideGiveUpOption();
-                    gameFrame.getEndUpPeaceButton().setEnabled(false);
-                    gameFrame.stopGameTimer();
-                    gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
-                    gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
-                    gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
-                    gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
-                    GamePersistence.saveGame(gameFrame.getActiveSession());
-                }
-            } else {
-                System.out.println("AI 找不到最佳棋子，触发游戏结束检查。");
-                String message = "黑方投降！";
-                gameFrame.updateStatusMessage(message, Color.BLUE, true);
-                this.setGameInteractionEnabled(false); // 禁用交互
-                gameFrame.addRedCampScore();
-                gameFrame.updateScoreLabel();
-                repaint();
-                gameFrame.hideGiveUpOption();
-                gameFrame.getEndUpPeaceButton().setEnabled(false);
-                gameFrame.stopGameTimer();
-                gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
-                gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
-                gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
-                gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
-                GamePersistence.saveGame(gameFrame.getActiveSession());
+                            if (result != null) {
+                                // **模拟落子：在 EDT 线程安全地执行 UI 更新**
+                                // 为了让 handleMouseClick 能通过 check，这里 isAIThinking 已经被 unlockUIAfterAI 设为 false 了
+                                AbstractPiece bestPiece = result.bestPiece;
+                                int Row = result.targetMove.x;
+                                int Col = result.targetMove.y;
+
+                                // 1. 模拟第一次点击：选中棋子
+                                int startX = getX(bestPiece.getCol());
+                                int startY = getY(bestPiece.getRow());
+                                handleMouseClick(startX, startY);
+
+                                // 2. 模拟第二次点击：执行移动
+                                int destX = getX(Col);
+                                int destY = getY(Row);
+                                handleMouseClick(destX, destY);
+
+                                gameFrame.updateStatusMessage(" (黑方) 自动落子", Color.MAGENTA, true);
+                            } else {
+                                // AI 找不到走法（认输逻辑）
+                                System.out.println("AI 找不到合法走法，触发游戏结束检查。");
+                                handleAIResign();
+                            }
+
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        } finally {
+                            // 兜底：确保一定解除了锁定状态
+                            if (isAIThinking) {
+                                isAIThinking = false;
+                                setCursor(Cursor.getDefaultCursor());
+                            }
+                        }
+                    }
+                };
+
+                // 启动后台线程
+                worker.execute();
             }
         }
     }
 
+    private void lockUIForAI() {
+        isAIThinking = true;
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        // 禁用 GameFrame 上的功能按钮
+        if (gameFrame != null) {
+            gameFrame.getTakeBackAMove().setEnabled(false);
+            gameFrame.getRestartButton().setEnabled(false);
+            gameFrame.getSaveAndOutButton().setEnabled(false);
+            gameFrame.getGiveUpButton().setEnabled(false);
+            gameFrame.getEndUpPeaceButton().setEnabled(false);
+            // 注意：不禁用 AIModel 按钮，允许用户中途取消人机模式（需要额外逻辑支持，目前暂且禁用防止状态错乱）
+            // gameFrame.getAIModel().setEnabled(false);
+        }
+    }
+
+    private void unlockUIAfterAI() {
+        isAIThinking = false;
+        setCursor(Cursor.getDefaultCursor());
+        if (gameFrame != null) {
+            // 恢复基础按钮
+            gameFrame.getRestartButton().setEnabled(true);
+            gameFrame.getSaveAndOutButton().setEnabled(true);
+
+            boolean canUndo = !model.getMoveHistory().isEmpty();
+            gameFrame.getTakeBackAMove().setEnabled(canUndo);
+            gameFrame.getEndUpPeaceButton().setEnabled(canUndo);
+            gameFrame.getAIModel().setEnabled(true);
+            boolean inCheck = model.isInCheck(currentCamp.isRedTurn());
+
+            if (inCheck) {
+                // 如果被将军，确保认输按钮可见且可用
+                String name = currentCamp.isRedTurn() ? "红方" : "黑方";
+                gameFrame.showGiveUpOption(name);
+                gameFrame.getGiveUpButton().setEnabled(true); // 强制启用
+
+                // 通常被将军时不给求和
+                gameFrame.getEndUpPeaceButton().setEnabled(false);
+            } else {
+                // 如果没被将军，通常隐藏认输按钮（或者根据你的需求保持显示）
+                gameFrame.hideGiveUpOption();
+            }
+        }
+    }
+
+    private void handleAIResign() {
+        String message = "黑方投降！";
+        gameFrame.updateStatusMessage(message, Color.BLUE, true);
+        this.setGameInteractionEnabled(false); // 禁用交互
+        gameFrame.addRedCampScore();
+        gameFrame.updateScoreLabel();
+        repaint();
+        gameFrame.hideGiveUpOption();
+        gameFrame.getEndUpPeaceButton().setEnabled(false);
+        gameFrame.stopGameTimer();
+        gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
+        gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
+        gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
+        gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+        GamePersistence.saveGame(gameFrame.getActiveSession());
+    }
 
     public boolean getUseAI () {
         return useAI;
@@ -929,15 +1025,14 @@ public class ChessBoardPanel extends JPanel {
     }
 
     private void triggerAutoWarning() {
-        // 当前回合的玩家就是需要警告的玩家
         boolean isCurrentPlayerRed = currentCamp.isRedTurn();
         String player = isCurrentPlayerRed ? "红方" : "黑方";
 
-        // 1. 检查前提条件：游戏运行中，非 AI 模式，警告功能开启
+    // 1. 检查前提条件：游戏运行中，非 AI 模式，警告功能开启
         if (!interactionEnabled) return;
-        if ( useAI && !currentCamp.isRedTurn()) return;
+        if (useAI && !currentCamp.isRedTurn()) return;
 
-        // 如果计时器到期时用户已选中棋子，我们清除选中状态并退出，避免干扰用户当前选择。
+    // 如果计时器到期时用户已选中棋子，我们清除选中状态并退出，避免干扰用户当前选择。
         if (selectedPiece != null) {
             selectedPiece = null;
             legalMoves.clear();
@@ -945,12 +1040,8 @@ public class ChessBoardPanel extends JPanel {
             return;
         }
 
-
-        System.out.println("5 seconds inactivity detected - Triggering Auto Warning for " + player + "...");
-
-        // 2. 询问 AutoWarning 获取最佳棋子和走法
         AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
-
+        System.out.println("5 seconds inactivity detected - Triggering Auto Warning for " + player + "...");
         if (bestPiece != null) {
             java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
 
@@ -1034,4 +1125,3 @@ public class ChessBoardPanel extends JPanel {
         }
     }
 }
-
