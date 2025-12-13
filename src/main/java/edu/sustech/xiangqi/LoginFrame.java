@@ -256,6 +256,7 @@ public class LoginFrame extends JFrame{
     }
 
     //把所有相应器都放到这里了
+    //把所有相应器都放到这里了
     private void setupGameFrameListeners() {
         // =====================================================================
         //重新开始的响应器
@@ -368,11 +369,11 @@ public class LoginFrame extends JFrame{
                 gameFrame.updateStatusMessage("悔棋成功！", Color.BLUE, false);
                 gameFrame.repaint();
             } else {
-            model.removeLastMove();
-            currentCamp.returnTurn();
-            boardPanel.setNewGameModel(model, currentCamp);
-            gameFrame.updateStatusMessage("悔棋成功！", Color.BLUE, false);
-            gameFrame.repaint();
+                model.removeLastMove();
+                currentCamp.returnTurn();
+                boardPanel.setNewGameModel(model, currentCamp);
+                gameFrame.updateStatusMessage("悔棋成功！", Color.BLUE, false);
+                gameFrame.repaint();
             }
             if (!gameFrame.getEndUpPeaceButton().isEnabled()) {
                 gameFrame.getEndUpPeaceButton().setEnabled(true);
@@ -480,20 +481,20 @@ public class LoginFrame extends JFrame{
                 if (!gameFrame.getActiveSession().getChessBoardModel().getMoveHistory().isEmpty()) {
                     gameFrame.updateStatusMessage("双方和棋！", Color.BLUE, true);
                     AudioPlayer.playSound("src/main/resources/Audio/双方和棋.WAV");
-                gameFrame.hideGiveUpOption();
-                gameFrame.getBoardPanel().setGameInteractionEnabled(false);
-                gameFrame.stopGameTimer();
-                gameFrame.getBoardPanel().getIdleTimer().stop();
-                gameFrame.updateScoreLabel();
-                gameFrame.getEndUpPeaceButton().setEnabled(false);
-                gameFrame.getTakeBackAMove().setEnabled(false);
-                gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
-                gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
-                gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
-                gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
-                gameFrame.getActiveSession().setCoins(gameFrame.getCoins());
-                GamePersistence.saveGame(gameFrame.getActiveSession());
-                gameFrame.repaint();
+                    gameFrame.hideGiveUpOption();
+                    gameFrame.getBoardPanel().setGameInteractionEnabled(false);
+                    gameFrame.stopGameTimer();
+                    gameFrame.getBoardPanel().getIdleTimer().stop();
+                    gameFrame.updateScoreLabel();
+                    gameFrame.getEndUpPeaceButton().setEnabled(false);
+                    gameFrame.getTakeBackAMove().setEnabled(false);
+                    gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
+                    gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
+                    gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
+                    gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+                    gameFrame.getActiveSession().setCoins(gameFrame.getCoins());
+                    GamePersistence.saveGame(gameFrame.getActiveSession());
+                    gameFrame.repaint();
                 } else {
                     return;
                 }

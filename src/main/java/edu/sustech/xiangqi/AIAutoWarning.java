@@ -5,11 +5,12 @@ import edu.sustech.xiangqi.model.ChessBoardModel;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class AIAutoWarning {
     private static final int MAX_DEPTH = 3;
-
+    private static final int SURRENDER_THRESHOLD = 13000;
     public static AbstractPiece warningPiece(ChessBoardModel chessBoardModel, CurrentCamp camp) {//the camp refers to the user who is now to move the piece
         List<AbstractPiece> myPieces = new ArrayList<>();
         for (AbstractPiece piece : chessBoardModel.getPieces()) {
@@ -78,9 +79,13 @@ public class AIAutoWarning {
                     continue;
                 }
 
-                currentCamp.nextTurn(); // 临时切换到对手的回合
-                int moveScore = miniMaxValue(currentModel, currentCamp, MAX_DEPTH);
-                currentCamp.returnTurn();
+                int moveScore;
+                try {
+                    currentCamp.nextTurn(); // 临时切换到对手的回合
+                    moveScore = miniMaxValue(currentModel, currentCamp, MAX_DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE);
+                } finally {
+                    currentCamp.returnTurn(); // 确保状态恢复
+                }
 
                boolean isNewScoreBetter;
                if (isCurrentPlayerRed) {
@@ -144,9 +149,13 @@ public class AIAutoWarning {
                     continue;
                 }
 
-                currentCamp.nextTurn();
-                int moveScore = miniMaxValue(currentModel, currentCamp, MAX_DEPTH);
-                currentCamp.returnTurn();
+                int moveScore;
+                try {
+                    currentCamp.nextTurn(); // 临时切换到对手的回合
+                    moveScore = miniMaxValue(currentModel, currentCamp, MAX_DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE);
+                } finally {
+                    currentCamp.returnTurn(); // 确保状态恢复
+                }
 
                 if (isCurrentPlayerRed) {
                     if (moveScore > bestMoveScore) {
@@ -286,18 +295,11 @@ public class AIAutoWarning {
 
             }
         }
-        if (model.isInCheck(true)) {
-            score -= 2000;
-        } else {
-            if (model.isInCheck(false)) {
-                score += 2000;
-            }
-        }
         return score;
     }
 
     //the core AI method !
-    private static int miniMaxValue(ChessBoardModel model, CurrentCamp camp, int depth) {
+    private static int miniMaxValue(ChessBoardModel model, CurrentCamp camp, int depth, int alpha, int beta) {
         boolean isCurrentPlayerRed = camp.isRedTurn();
 
         if (isInMate(model, camp)) {
@@ -324,8 +326,7 @@ public class AIAutoWarning {
                 piecesToMove.add(p);
             }
         }
-
-        int bestEval = isCurrentPlayerRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        List<Move> potentialMoves = new ArrayList<>();
         for (AbstractPiece piece : piecesToMove) {
             for (int row =0; row < model.getRows(); row++) {
                 for (int col =0; col < model.getCols(); col++) {
@@ -334,6 +335,7 @@ public class AIAutoWarning {
                         continue;
                     }
 
+                    // --- 走子模拟并检查自杀（送将） ---
                     ChessBoardModel nextModel = model.deepCopy();
                     AbstractPiece currentPieceInCopy = nextModel.getPieceAt(piece.getRow(), piece.getCol());
                     AbstractPiece targetPieceInCopy = nextModel.getPieceAt(row, col);
@@ -347,16 +349,65 @@ public class AIAutoWarning {
                     if (nextModel.isInCheck(isCurrentPlayerRed)) {
                         continue;
                     }
-                    camp.nextTurn();
-                    int eval = miniMaxValue(nextModel, camp, depth - 1);
-                    camp.returnTurn();
 
-                    if (isCurrentPlayerRed) {
-                        bestEval = Math.max(bestEval, eval);
-                    } else {
-                        bestEval = Math.min(bestEval, eval);
-                    }
+                    // 计算走法优先级分数
+                    int priorityScore = getMovePriorityScore(model, piece, row, col, camp);
+
+                    potentialMoves.add(new Move(new Point(piece.getRow(), piece.getCol()), new Point(row, col), priorityScore));
                 }
+            }
+        }
+        // 2. 对走法进行排序：优先级分数高的走法排在前面
+        potentialMoves.sort(Comparator.comparingInt(move -> move.priorityScore));
+        java.util.Collections.reverse(potentialMoves); // 降序排列
+
+        int bestEval = isCurrentPlayerRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+
+        for (Move move : potentialMoves) {
+// 重新模拟走法（使用排序后的走法信息）
+            ChessBoardModel nextModel = model.deepCopy();
+            AbstractPiece pieceToMove = nextModel.getPieceAt(move.start.y, move.start.x);
+            AbstractPiece target = nextModel.getPieceAt(move.end.y, move.end.x);
+
+            if (target != null) {
+                nextModel.remove(target);
+            }
+            if (pieceToMove != null) {
+                nextModel.movePieceForce(pieceToMove, move.end.y, move.end.x);
+            }
+
+            // 递归调用（重点修正！）
+            int eval;
+            try {
+                camp.nextTurn();
+                // *** 修正了两个关键错误：使用 nextModel 和 depth - 1 ***
+                eval = miniMaxValue(nextModel, camp, depth - 1, alpha, beta);
+            } finally {
+                camp.returnTurn();
+            }
+
+            if (isCurrentPlayerRed) {
+                bestEval = Math.max(bestEval, eval);
+                alpha = Math.max(alpha, bestEval);
+            } else {
+                bestEval = Math.min(bestEval, eval);
+                beta = Math.min(beta, bestEval);
+            }
+            // 剪枝
+            if (beta <= alpha) {
+                break;
+            }
+        }
+
+        if (isCurrentPlayerRed) {
+            if (bestEval == Integer.MIN_VALUE) {
+                // 红方（MAX）找不到合法走法，返回一个极差的惩罚分（小于将死分）
+                return -10000;
+            }
+        } else {
+            if (bestEval == Integer.MAX_VALUE) {
+                // 黑方（MIN）找不到合法走法，返回一个极好的奖励分（红方视角，小于将死分）
+                return 10000;
             }
         }
         return bestEval;
@@ -404,5 +455,87 @@ public class AIAutoWarning {
             }
         }
         return true;
+    }
+
+    private static int getMovePriorityScore(ChessBoardModel model, AbstractPiece piece, int targetRow, int targetCol, CurrentCamp camp) {
+        int score = 0;
+        AbstractPiece target = model.getPieceAt(targetRow, targetCol);
+
+        if (target != null) {
+            int targetValue = target.getValue();
+            int pieceValue = piece.getValue();
+
+            score += 1000 + (targetValue * 10) - pieceValue;
+        }
+
+        ChessBoardModel nextModel = model.deepCopy();
+        AbstractPiece currentPieceInCopy = nextModel.getPieceAt(piece.getRow(), piece.getCol());
+
+        // 模拟吃子和移动 (与 miniMaxValue 中的逻辑相同)
+        if (target != null) {
+            AbstractPiece targetPieceInCopy = nextModel.getPieceAt(targetRow, targetCol);
+            if (targetPieceInCopy != null) {
+                nextModel.remove(targetPieceInCopy);
+            }
+        }
+        if (currentPieceInCopy != null) {
+            nextModel.movePieceForce(currentPieceInCopy, targetRow, targetCol);
+        }
+
+        // 使用 try-finally 块确保 camp 状态安全恢复 (P1 优化)
+        try {
+            camp.nextTurn(); // 临时切换到对手回合
+
+            if (nextModel.isInCheck(camp.isRedTurn())) {
+                // P2: 将军得分 (9000分，高于所有吃子走法)
+                score += 9000;
+
+                // P1: 将死检查 (Checkmate Score)
+                if (isInMate(nextModel, camp)) {
+                    // 如果能将死，优先级绝对最高
+                    score += 100000;
+                }
+            }
+        } finally {
+            camp.returnTurn(); // 恢复回合状态
+        }
+        return score;
+    }
+
+    public static boolean shouldBlackAISurrender(ChessBoardModel chessBoardModel, CurrentCamp currentCamp) {
+        // 仅对黑方（非红方）进行投降检查
+        if (currentCamp.isRedTurn()) {
+            return false;
+        }
+
+        boolean isCurrentPlayerRed = currentCamp.isRedTurn();
+        int bestPossibleScoreForBlack = Integer.MAX_VALUE;
+        List<AbstractPiece> myPieces = new ArrayList<>();
+
+        for (AbstractPiece piece : chessBoardModel.getPieces()) {
+            if (piece.isRed() == isCurrentPlayerRed) {
+                myPieces.add(piece);
+            }
+        }
+
+        // 如果黑方棋子为空，则已经输了，无需投降
+        if (myPieces.isEmpty()) {
+            return false;
+        }
+
+
+        for (AbstractPiece piece : myPieces) {
+            // pieceTotalMoveCount 返回的是该棋子能达到的最低分数
+            int pieceBestMoveScore = pieceTotalMoveCount(chessBoardModel, piece, currentCamp);
+            // 黑方 (MIN player) 寻找所有走法中的最小分数（即对黑方最好的结果）
+            bestPossibleScoreForBlack = Math.min(bestPossibleScoreForBlack, pieceBestMoveScore);
+        }
+
+
+        if (bestPossibleScoreForBlack >= SURRENDER_THRESHOLD) {
+            return true;
+        }
+
+        return false;
     }
 }

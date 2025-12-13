@@ -1,8 +1,5 @@
 package edu.sustech.xiangqi.ui;
-import edu.sustech.xiangqi.AIAutoWarning;
-import edu.sustech.xiangqi.CurrentCamp;
-import edu.sustech.xiangqi.GameFrame;
-import edu.sustech.xiangqi.MoveEveryStep;
+import edu.sustech.xiangqi.*;
 import edu.sustech.xiangqi.model.ChessBoardModel;
 import edu.sustech.xiangqi.model.AbstractPiece;
 
@@ -118,14 +115,14 @@ public class ChessBoardPanel extends JPanel {
                 idleTimer.restart();
             }
         } else {
-              gameFrame.stopGameTimer();
-                if (idleTimer.isRunning()) {
-                    idleTimer.stop();
-                }
+            gameFrame.stopGameTimer();
+            if (idleTimer.isRunning()) {
+                idleTimer.stop();
+            }
             // 禁用时
             if (this.model.getMoveHistory().isEmpty()) {
                 gameFrame.updateStatusMessage("请点击开始", Color.BLUE, true);
-        }else {
+            }else {
                 return;
             }
         }
@@ -299,6 +296,25 @@ public class ChessBoardPanel extends JPanel {
                 if (!messageShown) {//Only update turn label if we didn't just show a warning
                     updateTurnLabel();
                 }
+                if (useAI && currentCamp.isRedTurn()) {
+                    if (AIAutoWarning.shouldBlackAISurrender(model, currentCamp)) {
+                        // 黑方投降
+                        String loser = "黑方";
+                        String message = loser + " 自动认输！" ;
+                        gameFrame.addRedCampScore();
+                        gameFrame.updateStatusMessage(message, Color.BLUE, true);
+                        this.setGameInteractionEnabled(false);
+                        gameFrame.hideGiveUpOption();
+                        gameFrame.getEndUpPeaceButton().setEnabled(false);
+                        gameFrame.stopGameTimer();
+                        gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
+                        gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
+                        gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
+                        gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+                        GamePersistence.saveGame(gameFrame.getActiveSession());
+                        return; // 提前退出，不再执行后续的将死/困毙判断
+                    }
+                }
                 if (useAI) {
                     if (!currentCamp.isRedTurn()) {
                         idleTimer.stop();
@@ -331,7 +347,7 @@ public class ChessBoardPanel extends JPanel {
                 String winner = currentCamp.isRedTurn() ? "黑方" : "红方";
                 String loser = currentCamp.isRedTurn() ? "红方" : "黑方";
                 message = winner + "将死" + loser;
-               ;
+                ;
                 if (currentCamp.isRedTurn()) {
                     gameFrame.addBlackCampScore();
                     gameFrame.updateScoreLabel();
