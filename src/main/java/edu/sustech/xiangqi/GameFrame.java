@@ -133,7 +133,7 @@ public class GameFrame extends JFrame {
         boolean isGameRunning = !Startbutton.isEnabled();
         this.boardPanel.setGameInteractionEnabled(isGameRunning);
 
-        updateScoreLabel();//??
+        updateScoreLabel();//
         // ==================== 5. Finalize Window ====================
         this.pack(); // Adjusts window size based on components
         this.setVisible(false);

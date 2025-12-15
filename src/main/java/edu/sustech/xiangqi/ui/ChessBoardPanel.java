@@ -6,7 +6,6 @@ import edu.sustech.xiangqi.model.AbstractPiece;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.List;
 import java.util.ArrayList;
 
 public class ChessBoardPanel extends JPanel {
@@ -43,6 +42,9 @@ public class ChessBoardPanel extends JPanel {
     private Timer idleTimer;
     private boolean useAI = false;
 
+    // 新增：用于管理自动提示的后台线程
+    private SwingWorker<AIResult, Void> warningWorker;
+
     private GameFrame gameFrame;
 
     public ChessBoardPanel(ChessBoardModel model, CurrentCamp camp, GameFrame gameFrame) {
@@ -52,7 +54,7 @@ public class ChessBoardPanel extends JPanel {
         // 1. 设置布局为 null，这样我们可以用 setBounds 随意放置 Label
         this.setLayout(null);
 
-        this.idleTimer = new Timer(5000, new ActionListener() {
+        this.idleTimer = new Timer(2500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 triggerAutoWarning();
@@ -76,14 +78,41 @@ public class ChessBoardPanel extends JPanel {
 
     //  修改：updateTurnLabel 方法，用于在切换回合时更新提示文字
     public void updateTurnLabel() {
-        if (!interactionEnabled) return; // 如果游戏还没开始，不更新回合文字
+
+        if (!interactionEnabled) return;
 
         if (currentCamp.isRedTurn()) {
-
-            gameFrame.updateStatusMessage("当前回合：红方", Color.RED, true);
+            boolean inCheck = model.isInCheck(currentCamp.isRedTurn());
+            boolean hasLegalMoves = model.hasLegalMoves(currentCamp.isRedTurn());
+            if (hasLegalMoves) {
+                if (inCheck) {
+                    gameFrame.updateStatusMessage("黑方将红方", Color.RED, true);
+                } else {
+                    gameFrame.updateStatusMessage("当前回合：红方", Color.RED, true);
+                }
+            } else  {
+                if (inCheck) {
+                    gameFrame.updateStatusMessage("黑方将死红方", Color.RED, true);
+                }  else {
+                    gameFrame.updateStatusMessage("红方困毙！黑方获胜！", Color.RED, true);
+                }
+            }
         } else {
-
-            gameFrame.updateStatusMessage("当前回合：黑方", Color.BLACK, true);
+            boolean inCheck = model.isInCheck(currentCamp.isRedTurn());
+            boolean hasLegalMoves = model.hasLegalMoves(currentCamp.isRedTurn());
+            if (hasLegalMoves) {
+                if (inCheck) {
+                    gameFrame.updateStatusMessage("红方将黑方", Color.BLACK, true);
+                }  else {
+                    gameFrame.updateStatusMessage("当前回合：黑方", Color.BLACK, true);
+                }
+            } else   {
+                if (inCheck) {
+                    gameFrame.updateStatusMessage("红方将死黑方", Color.BLACK, true);
+                }   else {
+                    gameFrame.updateStatusMessage("黑方困毙！红方获胜！", Color.BLACK, true);
+                }
+            }
         }
     }
     public ChessBoardModel model() {
@@ -112,7 +141,9 @@ public class ChessBoardPanel extends JPanel {
                     idleTimer.restart();
                 } else {
                     idleTimer.stop();
-                    autoAIdoing();
+                    if (!isAIThinking) {
+                        autoAIdoing();
+                    }
                 }
             } else  {
                 idleTimer.restart();
@@ -140,6 +171,12 @@ public class ChessBoardPanel extends JPanel {
 
         if (isAIThinking) {
             return;
+        }
+
+        if (warningWorker != null && !warningWorker.isDone()) {
+            warningWorker.cancel(true);
+            warningWorker = null;
+            System.out.println("User clicked, warning calculation cancelled.");
         }
 
         if (!useAI) {
@@ -301,7 +338,6 @@ public class ChessBoardPanel extends JPanel {
                 currentCamp.nextTurn(); // 切换红黑
                 legalMoves.clear();
                 selectedPiece = null;
-
                 gameFrame.refreshLastMoveVisuals();
                 checkAndHandleGameOver(currentCamp, model); // 检查黑方是否将死/困毙
 
@@ -314,16 +350,37 @@ public class ChessBoardPanel extends JPanel {
                     updateTurnLabel();
                 }
 
-                if (useAI && currentCamp.isRedTurn()) {
+//                if (useAI && currentCamp.isRedTurn()) {
+//                    if (AIAutoWarning.shouldBlackAISurrender(model, currentCamp)) {
+//                        handleAIResign();
+//                        return; // 提前退出，不再执行后续的将死/困毙判断
+//                    }
+//                }
+//                if (useAI) {
+//                    if (!currentCamp.isRedTurn()) {
+//                        idleTimer.stop();
+//                        autoAIdoing();
+//                    } else {
+//                        idleTimer.restart();
+//                    }
+//                } else {
+//                    idleTimer.restart();
+//                }
+
+                // AI 触发逻辑修正：使用 invokeLater 确保状态稳定后再触发
+                if (useAI) {
                     if (AIAutoWarning.shouldBlackAISurrender(model, currentCamp)) {
                         handleAIResign();
-                        return; // 提前退出，不再执行后续的将死/困毙判断
+                        return;
                     }
-                }
-                if (useAI) {
                     if (!currentCamp.isRedTurn()) {
                         idleTimer.stop();
-                        autoAIdoing();
+                        // 确保在事件派发线程稍后执行，避免状态未完全同步
+                        SwingUtilities.invokeLater(() -> {
+                            if (useAI && !currentCamp.isRedTurn() && !isAIThinking) {
+                                autoAIdoing();
+                            }
+                        });
                     } else {
                         idleTimer.restart();
                     }
@@ -843,11 +900,19 @@ public class ChessBoardPanel extends JPanel {
 
     private static class AIResult {
         AbstractPiece bestPiece;
-        Point targetMove;
+        Point targetMove; // 单个走法（给AI对手用）
+        java.util.List<Point> bestMoves; // 多个建议走法（给提示系统用）
 
+        // 构造函数1：用于AI对手（单个走法）
         public AIResult(AbstractPiece bestPiece, Point targetMove) {
             this.bestPiece = bestPiece;
             this.targetMove = targetMove;
+        }
+
+        // 构造函数2：用于自动提示（多个走法列表）
+        public AIResult(AbstractPiece bestPiece, java.util.List<Point> bestMoves) {
+            this.bestPiece = bestPiece;
+            this.bestMoves = bestMoves;
         }
     }
 
@@ -859,6 +924,8 @@ public class ChessBoardPanel extends JPanel {
         if (isAIThinking) {
             return;
         }
+
+        if (currentCamp.isRedTurn()) return;
 
         // 仅在黑方回合时自动执行
         if (!currentCamp.isRedTurn()) {
@@ -905,9 +972,8 @@ public class ChessBoardPanel extends JPanel {
                             // 注意：为了安全，我们在下面操作前会先解除 lock，但也要防止操作中出现异常
                             unlockUIAfterAI();
 
-                            // --- 安全检查 ---
-                            // 如果在此期间游戏状态发生异常变化（如被强制结束），则不执行落子
-                            if (currentCamp.isRedTurn() || !interactionEnabled) {
+                            //如果计算结束时用户已经关闭了 AI 模式，或者游戏结束，则不要落子
+                            if (!useAI || currentCamp.isRedTurn() || !interactionEnabled) {
                                 return;
                             }
 
@@ -930,7 +996,9 @@ public class ChessBoardPanel extends JPanel {
                                 int destY = getY(Row);
                                 handleMouseClick(destX, destY);
 
-                                gameFrame.updateStatusMessage(" (黑方) 自动落子", Color.MAGENTA, true);
+                                updateTurnLabel();
+                                repaint();
+
                             } else {
                                 // AI 找不到走法（认输逻辑）
                                 System.out.println("AI 找不到合法走法，触发游戏结束检查。");
@@ -966,6 +1034,7 @@ public class ChessBoardPanel extends JPanel {
             gameFrame.getSaveAndOutButton().setEnabled(false);
             gameFrame.getGiveUpButton().setEnabled(false);
             gameFrame.getEndUpPeaceButton().setEnabled(false);
+             gameFrame.getChangeinformation().setEnabled(false);
             // 注意：不禁用 AIModel 按钮，允许用户中途取消人机模式（需要额外逻辑支持，目前暂且禁用防止状态错乱）
             // gameFrame.getAIModel().setEnabled(false);
         }
@@ -978,6 +1047,7 @@ public class ChessBoardPanel extends JPanel {
             // 恢复基础按钮
             gameFrame.getRestartButton().setEnabled(true);
             gameFrame.getSaveAndOutButton().setEnabled(true);
+            gameFrame.getChangeinformation().setEnabled(true);
 
             boolean canUndo = !model.getMoveHistory().isEmpty();
             gameFrame.getTakeBackAMove().setEnabled(canUndo);
@@ -1022,44 +1092,129 @@ public class ChessBoardPanel extends JPanel {
     }
     public void setUseAI(boolean useAI) {
         this.useAI = useAI;
+        // 如果开启了 AI，且当前是黑方回合，且 AI 当前没有在思考，则立即启动
+        if (useAI && !currentCamp.isRedTurn() && !isAIThinking && interactionEnabled) {
+            autoAIdoing();
+        }
     }
 
     private void triggerAutoWarning() {
         boolean isCurrentPlayerRed = currentCamp.isRedTurn();
         String player = isCurrentPlayerRed ? "红方" : "黑方";
 
-    // 1. 检查前提条件：游戏运行中，非 AI 模式，警告功能开启
+        // 1. 检查前提条件：游戏运行中，非 AI 模式，警告功能开启
         if (!interactionEnabled) return;
         if (useAI && !currentCamp.isRedTurn()) return;
 
-    // 如果计时器到期时用户已选中棋子，我们清除选中状态并退出，避免干扰用户当前选择。
+        // 如果计时器到期时用户已选中棋子，我们清除选中状态并退出，避免干扰用户当前选择。
         if (selectedPiece != null) {
             selectedPiece = null;
             legalMoves.clear();
             repaint();
+            // 注意：这里不需要重启计时器，因为用户可能正在操作。
+            // 只有当用户再次长时间不操作（再次选中 null）时，handleMouseClick 会重启计时器。
             return;
         }
 
-        AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
-        System.out.println("5 seconds inactivity detected - Triggering Auto Warning for " + player + "...");
-        if (bestPiece != null) {
-            java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(model, bestPiece, currentCamp, this.autoMoves, this.autoEat);
+        System.out.println("5 seconds inactivity detected - Starting Background Calc for " + player + "...");
 
-            if (!bestMoves.isEmpty()) {
-                // 3. 模拟选中最佳棋子
-                this.selectedPiece = bestPiece;
-
-                // 4. 计算该棋子的所有合法走法（用于显示蓝色或红色圈）
-                calculateLegalMoves(bestPiece);
-                this.legalMoves.clear();
-                this.legalMoves.addAll(bestMoves);
-                // 6. 提示并重绘
-                gameFrame.updateStatusMessage(player + "：建议走法已显示", Color.MAGENTA, true);
-                AudioPlayer.playSound("src/main/resources/Audio/落子.wav");
-
-                repaint();
-            }
+        // 2. 暂停计时器，避免计算期间重复触发
+        if (idleTimer.isRunning()) {
+            idleTimer.stop();
         }
+
+        // 3. 为了线程安全，创建 ChessBoardModel 的深拷贝供后台线程使用
+        // 这样即使主线程UI发生了重绘或非结构性变动，也不会导致并发异常
+        // 注意：ChessBoardModel 需要正确实现 deepCopy()
+        final ChessBoardModel modelForWorker = model.deepCopy();
+
+        // 4. 创建 SwingWorker 后台计算
+        warningWorker = new SwingWorker<>() {
+            @Override
+            protected AIResult doInBackground() throws Exception {
+                // 在后台线程中进行耗时计算
+                // 注意：这里使用的是深拷贝的 model
+                AbstractPiece bestPiece = AIAutoWarning.warningPiece(modelForWorker, currentCamp);
+
+                if (bestPiece != null) {
+                    java.util.List<Point> tempAutoMoves = new ArrayList<>();
+                    java.util.List<Point> tempAutoEat = new ArrayList<>();
+
+                    java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(
+                            modelForWorker, bestPiece, currentCamp, tempAutoMoves, tempAutoEat
+                    );
+
+                    if (!bestMoves.isEmpty()) {
+                        // 找到原来的棋子对象（因为 bestPiece 属于 modelForWorker，我们需要映射回主线程的 model）
+                        // 简单的做法是：根据行和列在主 model 中找
+                        return new AIResult(bestPiece, bestMoves);
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    // 检查是否被取消（例如用户点击了棋盘）
+                    if (isCancelled()) {
+                        System.out.println("Warning calculation cancelled by user.");
+                        return; // 被取消了，不需要做任何 UI 更新
+                    }
+
+                    AIResult result = get();
+
+                    // 再次检查前置条件：确保游戏还在进行，且没有用户选中的棋子
+                    if (!interactionEnabled || selectedPiece != null) {
+                        // 如果环境变了，不做操作，重启计时器等待下一次机会
+                        if (interactionEnabled) idleTimer.restart();
+                        return;
+                    }
+
+                    if (result != null) {
+                        // 将结果映射回主 UI 的 model
+                        // 因为 result.bestPiece 是深拷贝里的对象，我们需要找到主 model 对应位置的棋子
+                        AbstractPiece realPiece = model.getPieceAt(result.bestPiece.getRow(), result.bestPiece.getCol());
+
+                        if (realPiece != null && realPiece.isRed() == currentCamp.isRedTurn()) {
+                            // 3. 模拟选中最佳棋子
+                            selectedPiece = realPiece;
+
+                            // 4. 计算该棋子的所有合法走法，并用 AI 推荐的走法覆盖显示
+                            calculateLegalMoves(realPiece); // 先计算基础合法走法
+                            legalMoves.clear();
+                            legalMoves.addAll(result.bestMoves); // 仅显示 AI 推荐的
+
+                            // 记录自动移动路径供参考（如果需要）
+                            autoMoves.clear();
+                            autoEat.clear();
+                            // 这里简单处理，具体分类逻辑在 calculateLegalMoves 也可以复用
+
+                            // 6. 提示并重绘
+                            gameFrame.updateStatusMessage(player + "：建议走法已显示", Color.MAGENTA, true);
+                            AudioPlayer.playSound("src/main/resources/Audio/落子.wav");
+
+                            repaint();
+                            // 成功显示提示后，不需要立即重启计时器，直到用户进行操作（点击）
+                        } else {
+                            // 找不到对应棋子（罕见情况），重试
+                            idleTimer.restart();
+                        }
+                    } else {
+                        // 计算完成但没有结果（null），重新开始计时
+                        idleTimer.restart();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // 出错也重启计时器
+                    if (interactionEnabled) idleTimer.restart();
+                } finally {
+                    warningWorker = null; // 清理引用
+                }
+            }
+        };
+
+        warningWorker.execute();
     }
     public Timer getIdleTimer() {
         return idleTimer;
