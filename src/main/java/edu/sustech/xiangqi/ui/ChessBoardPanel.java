@@ -1125,21 +1125,25 @@ public class ChessBoardPanel extends JPanel {
         // 3. 为了线程安全，创建 ChessBoardModel 的深拷贝供后台线程使用
         // 这样即使主线程UI发生了重绘或非结构性变动，也不会导致并发异常
         final ChessBoardModel modelForWorker = model.deepCopy();
+        final CurrentCamp campForWorker = new CurrentCamp();
+
+        // CurrentCamp 默认构造函数是红方，如果当前是黑方，副本需要切换一次以同步状态
+        if (!currentCamp.isRedTurn()) {
+            campForWorker.nextTurn();
+        }
 
         // 4. 创建 SwingWorker 后台计算
         warningWorker = new SwingWorker<>() {
             @Override
             protected AIResult doInBackground() throws Exception {
                 // 在后台线程中进行耗时计算
-                AbstractPiece bestPiece = AIAutoWarning.warningPiece(modelForWorker, currentCamp);
+                AbstractPiece bestPiece = AIAutoWarning.warningPiece(modelForWorker, campForWorker);
 
                 if (bestPiece != null) {
                     java.util.List<Point> tempAutoMoves = new ArrayList<>();
                     java.util.List<Point> tempAutoEat = new ArrayList<>();
 
-                    java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(
-                            modelForWorker, bestPiece, currentCamp, tempAutoMoves, tempAutoEat
-                    );
+                    java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(modelForWorker, bestPiece, campForWorker, tempAutoMoves, tempAutoEat);
 
                     if (!bestMoves.isEmpty()) {
                         // 找到原来的棋子对象（因为 bestPiece 属于 modelForWorker，我们需要映射回主线程的 model）
@@ -1187,7 +1191,7 @@ public class ChessBoardPanel extends JPanel {
                             autoEat.clear();
 
                             //提示并重绘
-                            gameFrame.updateStatusMessage(player + "：建议走法已显示", Color.MAGENTA, true);
+                            gameFrame.updateStatusMessage(player + "：建议走法已显示", Color.MAGENTA, false);
                             AudioPlayer.playSound("src/main/resources/Audio/落子.wav");
                             repaint();
                             // 成功显示提示后，不需要立即重启计时器，直到用户进行操作（点击）
