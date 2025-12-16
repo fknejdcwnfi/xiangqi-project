@@ -81,36 +81,44 @@ public class ChessBoardPanel extends JPanel {
 
         if (!interactionEnabled) return;
 
+        boolean isRed = currentCamp.isRedTurn();
+        boolean inCheck = model.isInCheck(isRed);
+        boolean hasLegalMoves = model.hasLegalMoves(isRed);
+
         if (currentCamp.isRedTurn()) {
-            boolean inCheck = model.isInCheck(currentCamp.isRedTurn());
-            boolean hasLegalMoves = model.hasLegalMoves(currentCamp.isRedTurn());
             if (hasLegalMoves) {
                 if (inCheck) {
                     gameFrame.updateStatusMessage("黑方将红方", Color.RED, true);
+                    return;
                 } else {
                     gameFrame.updateStatusMessage("当前回合：红方", Color.RED, true);
+                    return;
                 }
             } else  {
                 if (inCheck) {
                     gameFrame.updateStatusMessage("黑方将死红方", Color.RED, true);
+                    return;
                 }  else {
                     gameFrame.updateStatusMessage("红方困毙！黑方获胜！", Color.RED, true);
+                    return;
                 }
             }
         } else {
-            boolean inCheck = model.isInCheck(currentCamp.isRedTurn());
-            boolean hasLegalMoves = model.hasLegalMoves(currentCamp.isRedTurn());
             if (hasLegalMoves) {
                 if (inCheck) {
                     gameFrame.updateStatusMessage("红方将黑方", Color.BLACK, true);
+                    return;
                 }  else {
                     gameFrame.updateStatusMessage("当前回合：黑方", Color.BLACK, true);
+                    return;
                 }
             } else   {
                 if (inCheck) {
                     gameFrame.updateStatusMessage("红方将死黑方", Color.BLACK, true);
+                    return;
                 }   else {
                     gameFrame.updateStatusMessage("黑方困毙！红方获胜！", Color.BLACK, true);
+                    return;
                 }
             }
         }
@@ -133,8 +141,7 @@ public class ChessBoardPanel extends JPanel {
         this.interactionEnabled = enabled;
 
         if (interactionEnabled) {
-            // 游戏开始
-            updateTurnLabel();   // 显示 "当前回合：红方"
+            updateTurnLabel();
             gameFrame.startGameTimer();
             if (useAI) {
                 if (currentCamp.isRedTurn()) {
@@ -199,6 +206,13 @@ public class ChessBoardPanel extends JPanel {
         //吃子移动的代码如下
         if (!model.isValidPosition(row, col)) {//model 是‌棋盘模型对象‌
             return;
+        }
+
+        if (selectedPiece == null) {
+            AbstractPiece p = model.getPieceAt(row, col);
+            if (p != null && p.isRed() != currentCamp.isRedTurn()) {
+                return;
+            }
         }
 
         if (selectedPiece == null) {//selectedPiece是指我当前选中的棋子
@@ -317,7 +331,7 @@ public class ChessBoardPanel extends JPanel {
                 // 1. 先获取移动前的阵营（关键：此时还未切换回合）
                 boolean isRedTurn = currentCamp.isRedTurn();
                 boolean isCheck;
-                boolean messageShown = false; // <--- ADD THIS FLAG
+                boolean messageShown = false;
 
                 // 2. 根据移动前的阵营，检测对方是否被将军
                 if (isRedTurn) {
@@ -349,23 +363,6 @@ public class ChessBoardPanel extends JPanel {
                 if (!messageShown) {//Only update turn label if we didn't just show a warning
                     updateTurnLabel();
                 }
-
-//                if (useAI && currentCamp.isRedTurn()) {
-//                    if (AIAutoWarning.shouldBlackAISurrender(model, currentCamp)) {
-//                        handleAIResign();
-//                        return; // 提前退出，不再执行后续的将死/困毙判断
-//                    }
-//                }
-//                if (useAI) {
-//                    if (!currentCamp.isRedTurn()) {
-//                        idleTimer.stop();
-//                        autoAIdoing();
-//                    } else {
-//                        idleTimer.restart();
-//                    }
-//                } else {
-//                    idleTimer.restart();
-//                }
 
                 // AI 触发逻辑修正：使用 invokeLater 确保状态稳定后再触发
                 if (useAI) {
@@ -404,8 +401,6 @@ public class ChessBoardPanel extends JPanel {
             Color color = Color.BLUE;
             this.setGameInteractionEnabled(false);
             if (inCheck) {
-                // Checkmate: The previous player wins
-                //isGameOver = true;
                 String winner = currentCamp.isRedTurn() ? "黑方" : "红方";
                 String loser = currentCamp.isRedTurn() ? "红方" : "黑方";
                 message = winner + "将死" + loser;
@@ -998,7 +993,6 @@ public class ChessBoardPanel extends JPanel {
 
                                 updateTurnLabel();
                                 repaint();
-
                             } else {
                                 // AI 找不到走法（认输逻辑）
                                 System.out.println("AI 找不到合法走法，触发游戏结束检查。");
@@ -1035,6 +1029,7 @@ public class ChessBoardPanel extends JPanel {
             gameFrame.getGiveUpButton().setEnabled(false);
             gameFrame.getEndUpPeaceButton().setEnabled(false);
              gameFrame.getChangeinformation().setEnabled(false);
+            gameFrame.getAIModel().setEnabled(false);
             // 注意：不禁用 AIModel 按钮，允许用户中途取消人机模式（需要额外逻辑支持，目前暂且禁用防止状态错乱）
             // gameFrame.getAIModel().setEnabled(false);
         }
@@ -1048,6 +1043,7 @@ public class ChessBoardPanel extends JPanel {
             gameFrame.getRestartButton().setEnabled(true);
             gameFrame.getSaveAndOutButton().setEnabled(true);
             gameFrame.getChangeinformation().setEnabled(true);
+             gameFrame.getAIModel().setEnabled(true);
 
             boolean canUndo = !model.getMoveHistory().isEmpty();
             gameFrame.getTakeBackAMove().setEnabled(canUndo);
@@ -1066,6 +1062,7 @@ public class ChessBoardPanel extends JPanel {
             } else {
                 // 如果没被将军，通常隐藏认输按钮（或者根据你的需求保持显示）
                 gameFrame.hideGiveUpOption();
+                gameFrame.getGiveUpButton().setEnabled(true); // 强制启用
             }
         }
     }
@@ -1076,7 +1073,7 @@ public class ChessBoardPanel extends JPanel {
         this.setGameInteractionEnabled(false); // 禁用交互
         gameFrame.addRedCampScore();
         gameFrame.updateScoreLabel();
-        repaint();
+        gameFrame.addCoinsOnWin();
         gameFrame.hideGiveUpOption();
         gameFrame.getEndUpPeaceButton().setEnabled(false);
         gameFrame.stopGameTimer();
@@ -1084,7 +1081,9 @@ public class ChessBoardPanel extends JPanel {
         gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
         gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
         gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+        gameFrame.getActiveSession().setCoins(gameFrame.getCoins());
         GamePersistence.saveGame(gameFrame.getActiveSession());
+        repaint();
     }
 
     public boolean getUseAI () {
@@ -1125,7 +1124,6 @@ public class ChessBoardPanel extends JPanel {
 
         // 3. 为了线程安全，创建 ChessBoardModel 的深拷贝供后台线程使用
         // 这样即使主线程UI发生了重绘或非结构性变动，也不会导致并发异常
-        // 注意：ChessBoardModel 需要正确实现 deepCopy()
         final ChessBoardModel modelForWorker = model.deepCopy();
 
         // 4. 创建 SwingWorker 后台计算
@@ -1133,7 +1131,6 @@ public class ChessBoardPanel extends JPanel {
             @Override
             protected AIResult doInBackground() throws Exception {
                 // 在后台线程中进行耗时计算
-                // 注意：这里使用的是深拷贝的 model
                 AbstractPiece bestPiece = AIAutoWarning.warningPiece(modelForWorker, currentCamp);
 
                 if (bestPiece != null) {
@@ -1188,12 +1185,10 @@ public class ChessBoardPanel extends JPanel {
                             // 记录自动移动路径供参考（如果需要）
                             autoMoves.clear();
                             autoEat.clear();
-                            // 这里简单处理，具体分类逻辑在 calculateLegalMoves 也可以复用
 
-                            // 6. 提示并重绘
+                            //提示并重绘
                             gameFrame.updateStatusMessage(player + "：建议走法已显示", Color.MAGENTA, true);
                             AudioPlayer.playSound("src/main/resources/Audio/落子.wav");
-
                             repaint();
                             // 成功显示提示后，不需要立即重启计时器，直到用户进行操作（点击）
                         } else {
@@ -1220,9 +1215,7 @@ public class ChessBoardPanel extends JPanel {
         return idleTimer;
     }
     private void checkAndHandleGameOver(CurrentCamp camp, ChessBoardModel model) {
-        // 检查是否有任何合法走法
         boolean hasLegalMoves = model.hasLegalMoves(camp.isRedTurn());
-
         if (!hasLegalMoves) {
             if (model.isInCheck(camp.isRedTurn())) {
                 String winner = camp.isRedTurn() ? "黑方" : "红方";
@@ -1241,6 +1234,7 @@ public class ChessBoardPanel extends JPanel {
                     repaint();
                 }
                 System.out.println(loser + "被将死，游戏结束。");
+                gameFrame.addCoinsOnWin();
                 this.setGameInteractionEnabled(false);
                 gameFrame.hideGiveUpOption();
                 gameFrame.getEndUpPeaceButton().setEnabled(false);
@@ -1249,8 +1243,9 @@ public class ChessBoardPanel extends JPanel {
                 gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
                 gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
                 gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+                gameFrame.getActiveSession().setCoins(gameFrame.getCoins());
                 GamePersistence.saveGame(gameFrame.getActiveSession());
-                return;
+                repaint();
             }
             else {
                 String message = "困毙！！";
@@ -1259,13 +1254,12 @@ public class ChessBoardPanel extends JPanel {
                 if (currentCamp.isRedTurn()) {
                     gameFrame.addBlackCampScore();;
                     gameFrame.updateScoreLabel();
-                    repaint();
                 } else  {
                     gameFrame.addRedCampScore();
                     gameFrame.updateScoreLabel();
-                    repaint();
                 }
                 System.out.println("困毙，游戏结束。");
+                gameFrame.addCoinsOnWin();
                 this.setGameInteractionEnabled(false);
                 gameFrame.hideGiveUpOption();
                 gameFrame.getEndUpPeaceButton().setEnabled(false);
@@ -1274,8 +1268,9 @@ public class ChessBoardPanel extends JPanel {
                 gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
                 gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
                 gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+                gameFrame.getActiveSession().setCoins(gameFrame.getCoins());
                 GamePersistence.saveGame(gameFrame.getActiveSession());
-                return;
+                repaint();
             }
         }
     }

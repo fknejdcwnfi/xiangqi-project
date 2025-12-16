@@ -464,6 +464,7 @@ public class LoginFrame extends JFrame{
                 gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
                 gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
                 gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+                gameFrame.getActiveSession().setCoins(gameFrame.getCoins());
                 GamePersistence.saveGame(gameFrame.getActiveSession());
                 gameFrame.repaint();
             }
