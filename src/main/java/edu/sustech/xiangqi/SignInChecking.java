@@ -7,7 +7,9 @@ import java.util.Scanner;
 
 public class SignInChecking {
     public static boolean rightname(String importNickName){
-        if(Objects.equals(importNickName,"") || Objects.equals(importNickName,"null")){return false;}//I have change this for no null Username!
+        if(Objects.equals(importNickName,"") || Objects.equals(importNickName,"null")) {
+            return false;
+        }//I have change this for no null Username!
         else if(importNickName.length()>=15){return false;}
         else {
             try {
@@ -23,9 +25,9 @@ public class SignInChecking {
                         continue;
                     }///////////////////////////////////////////////
 
-                    if(Objects.equals(importNickName,trimmedNickname))
-                    {return false;}
-                    //  else if(Objects.equals(remainnickname,"")){return true;}
+                    if(Objects.equals(importNickName,trimmedNickname)) {
+                        return false;
+                    }
                 }
                 return true;
             } catch (FileNotFoundException e) {

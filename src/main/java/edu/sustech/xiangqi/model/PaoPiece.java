@@ -23,10 +23,10 @@ public class PaoPiece extends AbstractPiece{
             if (between < 0) return false;
 
             if (target == null) {
-                // 普通移动：中间不能有子
+                //普通移动：中间不能有子
                 return between == 0;
             } else {
-                // 吃子：目标必须是敌方，且中间恰好有 1 个子
+                //吃子目标必须是敌方，且中间恰好有 1 个子
                 if (target.isRed() == this.isRed()) return false;
                 return between == 1;
             }

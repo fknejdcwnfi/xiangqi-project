@@ -12,13 +12,11 @@ import java.net.URL;
 
 public class GameFrame extends JFrame {
 
-    // Logic Components
     private PlayGameSession activeSession;
     private ChessBoardPanel boardPanel;
     private Timer gameTimer;
     private int secondsElapsed;
 
-    // UI Components - Buttons
     private JButton Startbutton;
     private JButton changeinformation;
     private JButton saveAndOutButton;
@@ -28,20 +26,17 @@ public class GameFrame extends JFrame {
     private JButton endUpPeaceButton;
     private JButton AIModel;
 
-    // UI Components - Labels
     private JLabel timerLabel;
     private JLabel campGoalLabel;
     private JLabel statusLabel;
     private JLabel coinsLabel;
 
-    // Data
     private boolean isTourist;
     private String playerName;
     private int redCampScore;
     private int blackCampScore;
     private int coins;
 
-    // CONSTANTS
     private static final int SIDE_PANEL_WIDTH = 350; // Width for Left and Right panels to ensure symmetry
     private static final Dimension BUTTON_SIZE = new Dimension(140, 45);
 
@@ -49,7 +44,7 @@ public class GameFrame extends JFrame {
     static class BackgroundPanelLeft extends JPanel {
         private Image backgroundImage;
         public BackgroundPanelLeft() {
-            // 加载背景图（路径根据实际情况调整）
+            //加载背景图（路径根据实际情况调整）
             URL imgUrl = getClass().getResource("/Picture/gameframe框架左边图片.png");
             if (imgUrl != null) {
                 backgroundImage = new ImageIcon(imgUrl).getImage();
@@ -70,11 +65,11 @@ public class GameFrame extends JFrame {
     }
 
 
-    // 内部类：带背景的面板
+    //带背景的面板
     static class BackgroundPanelRight extends JPanel {
         private Image backgroundImage;
         public BackgroundPanelRight() {
-            // 加载背景图（路径根据实际情况调整）
+            //加载背景图
             URL imgUrl = getClass().getResource("/Picture/gameframe框架右边图片.png");
             if (imgUrl != null) {
                 backgroundImage = new ImageIcon(imgUrl).getImage();
@@ -103,11 +98,11 @@ public class GameFrame extends JFrame {
         this.setLocationRelativeTo(null);
         this.setLayout(new BorderLayout()); // Main Layout
 
-        // 初始化金币：仅登录用户有金币，游客不初始化
+        //初始化金币：仅登录用户有金币，游客不初始化
         if (!isTourist) {
             this.coins = activeSession != null ? activeSession.getCoins() : 5; // 登录用户默认5金币
         }
-        // 游客无需初始化金币（coins变量无效）
+        //游客无需初始化金币（coins变量无效）
 
         // ==================== 1. Session & Logic Init ====================
         initializeSession();
@@ -139,9 +134,7 @@ public class GameFrame extends JFrame {
         this.setVisible(false);
     }
 
-    /**
-     * Helper to Initialize Game Session Logic
-     */
+
     private void initializeSession() {
         if (isTourist) {
             activeSession = new PlayGameSession("Tourist");
@@ -158,9 +151,7 @@ public class GameFrame extends JFrame {
         }
     }
 
-    /**
-     * Helper to Initialize Scores and Timer Data
-     */
+
     private void initializeScores() {
         if (isTourist) {
             this.redCampScore = 0;
@@ -181,18 +172,16 @@ public class GameFrame extends JFrame {
         }
     }
 
-    /**
-     * Creates the Left Panel containing Text, Timer, and Score
-     */
+    //左边的框
     private JPanel createLeftPanel() {
         JPanel leftPanel = new BackgroundPanelLeft();
 
         JPanel contentContainer = new JPanel();
         contentContainer.setLayout(new BoxLayout(contentContainer, BoxLayout.Y_AXIS));
         contentContainer.setOpaque(false);
-        // contentContainer.setBackground(Color.WHITE);
 
-        // ======= STATUS LABEL (TOP) =======
+
+
         statusLabel = new JLabel("欢迎进入中国象棋", SwingConstants.CENTER);
         statusLabel.setFont(new Font("楷体", Font.BOLD, 22));
         statusLabel.setForeground(Color.RED);
@@ -201,7 +190,7 @@ public class GameFrame extends JFrame {
 
         contentContainer.add(Box.createVerticalStrut(30)); // spacing
 
-        // 1. Player Info
+
         if (!isTourist) {
             JLabel infoTitle = new JLabel("当前账号：");
             infoTitle.setFont(new Font("华文行楷", Font.BOLD, 16));
@@ -224,7 +213,7 @@ public class GameFrame extends JFrame {
             contentContainer.add(coinsLabel);
         }
 
-        // 2. Timer
+
         String initialTimeText = (secondsElapsed == 0) ? "游戏时长: 00:00:00" : activeSession.getPlayingTime();
         if(initialTimeText == null) initialTimeText = "游戏时长: 00:00:00";
 
@@ -235,7 +224,7 @@ public class GameFrame extends JFrame {
 
         contentContainer.add(Box.createVerticalStrut(30));
 
-        // 3. Score / Goal
+
         String goalText = String.format("<html>" +
                 "<div style='text-align:center; font-size:14px;'>" +
                 "<span style='color:red;'>红方: %d</span><br/><br/>" +
@@ -248,22 +237,18 @@ public class GameFrame extends JFrame {
         campGoalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentContainer.add(campGoalLabel);
 
-        leftPanel.add(contentContainer); // Add container to centered GridBag
+        leftPanel.add(contentContainer);
         return leftPanel;
     }
 
-    /**
-     * Creates the Right Panel containing all Buttons
-     */
+   //有边框
     private JPanel createRightPanel() {
         JPanel rightPanel = new BackgroundPanelRight();
 
         JPanel buttonContainer = new JPanel();
-        // Use GridLayout for uniform button sizes and spacing
         buttonContainer.setLayout(new GridLayout(0, 1, 0, 15));
         buttonContainer.setOpaque(false);
 
-        // Initialize Buttons
         Startbutton.setPreferredSize(BUTTON_SIZE);
 
         changeinformation = new AncientButton("修改信息");
@@ -290,14 +275,13 @@ public class GameFrame extends JFrame {
         endUpPeaceButton.setPreferredSize(BUTTON_SIZE);
 
         restartButton.addActionListener(e -> {
-            // 1. 停止当前循环配乐
+            //停止当前循环配乐
             AudioPlayer.stopLoopingSound("src/main/resources/Audio/斗地主.wav");
-            // 2. 重新启动循环配乐（AudioPlayer 内部保证单例，无二重奏）
+            //重新启动循环配乐无二重奏
             AudioPlayer.playLoopingSound("src/main/resources/Audio/斗地主.wav");
         });
 
 
-        // Add Buttons to Container
         buttonContainer.add(Startbutton);
 
         if (!isTourist) {
@@ -315,9 +299,6 @@ public class GameFrame extends JFrame {
         return rightPanel;
     }
 
-    // ========================================================================
-    //                         Getters & Setters & Helpers
-    // ========================================================================
 
     public void setVisible(boolean b) {
         super.setVisible(b);
@@ -399,7 +380,7 @@ public class GameFrame extends JFrame {
     public void updateScoreLabel() {
         String rankHtml="";
         int totalScore = this.redCampScore + this.blackCampScore;
-        // 极简段位判断：超过5（≥6）就是白银
+        // 极简段位判断超过5就是白银
         String rank;
         if (totalScore == 0) {
             rank = "新手";
@@ -481,13 +462,13 @@ public class GameFrame extends JFrame {
     }
 
     private void updateCoinsLabel() {
-        if (!isTourist) { // 仅登录用户显示金币
+        if (!isTourist) { //仅登录用户显示金币
             coinsLabel.setText("当前金币: " + coins + " 元");
         }
     }
 
     public void addCoinsOnWin() {
-        if (!isTourist) { // 游客不执行
+        if (!isTourist) { //游客不执行
             coins += 3;
             updateCoinsLabel();
         }
@@ -504,7 +485,7 @@ public class GameFrame extends JFrame {
         if (isTourist) {
             return true; // 游客无条件允许悔棋
         } else {
-            // 登录用户：金币≥1才允许悔棋
+            // 登录用户：金币>0才允许悔棋
             if (coins >= 1) {
                 coins -= 1;
                 updateCoinsLabel();

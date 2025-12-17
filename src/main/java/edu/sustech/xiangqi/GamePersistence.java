@@ -1,12 +1,9 @@
 package edu.sustech.xiangqi;
-
-import javax.imageio.IIOException;
 import java.io.*;
 
 public class GamePersistence {
 
     //Serializes(saves) the GameSession object to file named after the player
-
     public static void saveGame(PlayGameSession session) {
         String filename = session.getPlayerNameID() + ".sav";
         try (FileOutputStream fileOut = new FileOutputStream(filename);//this like bulid the file for the data to save

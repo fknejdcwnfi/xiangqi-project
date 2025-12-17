@@ -9,14 +9,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AudioPlayer {
-    // 1. 普通音效：防止同时播放
+    //普通音效：防止同时播放
     private static final Map<String, Clip> playingClips = new HashMap<>();
-    // 2. 循环音效：全局单例（key=音效路径，value=循环播放的Clip）
+    //循环音效：全局单例（key=音效路径，value=循环播放的Clip）
     private static final Map<String, Clip> loopingClips = new HashMap<>();
 
     public static void playSound(String soundPath) {
-        // 新增：检查文件是否存在
-        // 先检查该音效是否正在播放，若正在播放则直接返回
+        //检查文件是否存在
+        //先检查该音效是否正在播放，若正在播放则直接返回
         File soundFile = new File(soundPath);
         if (playingClips.containsKey(soundPath) && playingClips.get(soundPath).isRunning()) {
             return;
@@ -35,12 +35,12 @@ public class AudioPlayer {
                 DataLine.Info info = new DataLine.Info(Clip.class, format);
                 Clip clip = (Clip) AudioSystem.getLine(info);
                 clip.open(audioStream);
-                System.out.println("开始播放音效"); // 新增：确认播放开始
+                System.out.println("开始播放音效"); //确认播放开始
                 clip.start();
 
                 clip.addLineListener(event -> {
                     if (event.getType() == LineEvent.Type.STOP) {
-                        System.out.println("音效播放完毕"); // 新增：确认播放结束
+                        System.out.println("音效播放完毕"); //确认播放结束
                         clip.close();
                         try {
                             audioStream.close();
@@ -65,9 +65,9 @@ public class AudioPlayer {
         }).start();
     }
 
-    // 循环音效播放（全局单例，避免叠加）
+    //循环音效播放
     public static void playLoopingSound(String soundPath) {
-        // 若已存在循环实例且正在播放，直接返回（避免二重奏）
+        //若已存在循环实例且正在播放，直接返回（避免二重奏）
         if (loopingClips.containsKey(soundPath) && loopingClips.get(soundPath).isRunning()) {
             return;
         }
@@ -86,16 +86,16 @@ public class AudioPlayer {
                 Clip clip = (Clip) AudioSystem.getLine(info);
                 clip.open(audioStream);
 
-                // 先停止旧的循环实例（如果有）
+                //先停止旧的循环实例
                 if (loopingClips.containsKey(soundPath)) {
                     Clip oldClip = loopingClips.get(soundPath);
                     oldClip.stop();
                     oldClip.close();
                 }
-                // 保存新的循环实例
+                //保存新的循环实例
                 loopingClips.put(soundPath, clip);
 
-                // 设置循环播放（LOOP_CONTINUOUSLY = 无限循环）
+                //设置循环播放（LOOP_CONTINUOUSLY = 无限循环）
                 clip.loop(Clip.LOOP_CONTINUOUSLY);
                 clip.start();
 
@@ -105,6 +105,7 @@ public class AudioPlayer {
             }
         }).start();
     }
+
     // 停止指定循环音效
     public static void stopLoopingSound(String soundPath) {
         if (loopingClips.containsKey(soundPath)) {

@@ -1,10 +1,9 @@
 package edu.sustech.xiangqi;
-
 import edu.sustech.xiangqi.model.ChessBoardModel;
-import java.io.Serializable; // <--- Import this
-// Change the class definition
+import java.io.Serializable;
 
-public class PlayGameSession implements Serializable{//这是玩家状态属性的类，用来让玩家成为一个对象
+//这是玩家状态属性的类，用来让玩家成为一个对象
+public class PlayGameSession implements Serializable{
     private static final long serialVersionUID = 1L;
     private String PlayerNameID;
     private ChessBoardModel chessBoardModel;

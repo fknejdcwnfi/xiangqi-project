@@ -42,7 +42,7 @@ public class ChessBoardPanel extends JPanel {
     private Timer idleTimer;
     private boolean useAI = false;
 
-    // 新增：用于管理自动提示的后台线程
+    //用于管理自动提示的后台线程
     private SwingWorker<AIResult, Void> warningWorker;
 
     private GameFrame gameFrame;
@@ -51,7 +51,7 @@ public class ChessBoardPanel extends JPanel {
         this.model = model;
         this.currentCamp = camp; //initialize with the passed object
         this.gameFrame = gameFrame;
-        // 1. 设置布局为 null，这样我们可以用 setBounds 随意放置 Label
+        //设置布局为null随意放置 Label
         this.setLayout(null);
 
         this.idleTimer = new Timer(2500, new ActionListener() {
@@ -76,7 +76,7 @@ public class ChessBoardPanel extends JPanel {
         });
     }
 
-    //  修改：updateTurnLabel 方法，用于在切换回合时更新提示文字
+    //updateTurnLabel方法，用于在切换回合时更新提示文字
     public void updateTurnLabel() {
 
         if (!interactionEnabled) return;
@@ -229,25 +229,25 @@ public class ChessBoardPanel extends JPanel {
                 }
             }
 
-        } else {//此时有选中的状态，当前已选中棋子 -> 尝试移动或吃子
+        } else {//此时有选中的状态，当前已选中棋子，尝试移动或吃子
             AbstractPiece target = model.getPieceAt(row, col);
             boolean moveSuccess = false; // 标记是否移动成功
-            // A. 点击了自己的棋子 -> 重新选中（换一个子）
+            //点击了自己的棋子，重新选中（换一个子）
             if (target != null && target.isRed() == selectedPiece.isRed()) {
-                // 只有也是己方棋子才换选中，否则视为移动目标
+                //只有也是己方棋子才换选中，否则视为移动目标
                 selectedPiece = target;
                 calculateLegalMoves(selectedPiece);//=====================
 
                 repaint();
-                return; // 仅仅是换了选中的子，不切换回合
+                return; //仅仅是换了选中的子，不切换回合
             }
-            // B. 点击了空地或敌人 -> 尝试移动
+            //点击了空地或敌人，尝试移动
             if (target != null) {
                 if (target.isRed() == selectedPiece.isRed()) {
                     selectedPiece = target;
-                    calculateLegalMoves(selectedPiece); // 重新计算合法位置
+                    calculateLegalMoves(selectedPiece); //重新计算合法位置
                     repaint();
-                    return; // 直接返回，不执行后续吃子逻辑
+                    return; //直接返回，不执行后续吃子逻辑
                 }
 
                 if (selectedPiece.canMoveTo(row, col, model)) {
@@ -257,9 +257,9 @@ public class ChessBoardPanel extends JPanel {
                     AbstractPiece pieceToMoveInCopy = currentModel.getPieceAt(selectedPiece.getRow(), selectedPiece.getCol());
                     AbstractPiece targetPieceInCopy = currentModel.getPieceAt(row, col);
 
-                    // Simulate the move in the copy
+
                     if (targetPieceInCopy != null) {
-                        currentModel.remove(targetPieceInCopy); // Remove target
+                        currentModel.remove(targetPieceInCopy); //Remove target
                     }
                     if (pieceToMoveInCopy != null) {
                         currentModel.movePieceForce(pieceToMoveInCopy, row, col);
@@ -272,7 +272,7 @@ public class ChessBoardPanel extends JPanel {
                         selectedPiece = null;
                         legalMoves.clear();
                         repaint();
-                        return; // ABORT move
+                        return; //ABORT move
                     }
 
                     MoveEveryStep move = new MoveEveryStep(selectedPiece, row, col, target, this.currentCamp);
@@ -280,9 +280,9 @@ public class ChessBoardPanel extends JPanel {
                     model.recordMove(move);
                     //这是记录棋子的吃子情况
 
-                    // 保存 target 引用，先移除目标
+                    //保存 target 引用，先移除目标
                     model.remove(target);
-                    // 直接强制移动（跳过再次校验，避免因目标已被移除影响逻辑）
+                    //直接强制移动（跳过再次校验，避免因目标已被移除影响逻辑）
                     model.movePieceForce(selectedPiece, row, col);//？
                     selectedPiece = null;
                     moveSuccess = true;
@@ -292,7 +292,7 @@ public class ChessBoardPanel extends JPanel {
                     return;
                 }
             } else {
-                // 目标为空，走普通移动，使用正常的 movePiece（含校验）
+                //目标为空，走普通移动，使用正常的 movePiece
                 if (selectedPiece.canMoveTo(row, col, model)) {
                     //start of self-check logic for simple move
                     ChessBoardModel currentModel = model.deepCopy();
@@ -328,32 +328,32 @@ public class ChessBoardPanel extends JPanel {
                 }
             }
             if (moveSuccess) {
-                // 1. 先获取移动前的阵营（关键：此时还未切换回合）
+                //先获取移动前的阵营（关键：此时还未切换回合）
                 boolean isRedTurn = currentCamp.isRedTurn();
                 boolean isCheck;
                 boolean messageShown = false;
 
-                // 2. 根据移动前的阵营，检测对方是否被将军
+                //根据移动前的阵营，检测对方是否被将军
                 if (isRedTurn) {
-                    isCheck = model.isInCheck(false); // 红方走后检测黑方
+                    isCheck = model.isInCheck(false); //红方走后检测黑方
                     if (isCheck) {
                         isInCheckCount++;
                         gameFrame.updateStatusMessage("红方将黑方", Color.RED, true);
                         messageShown = true;
                     }
                 } else {
-                    isCheck = model.isInCheck(true); // 黑方走后检测红方
+                    isCheck = model.isInCheck(true); //黑方走后检测红方
                     if (isCheck) {
                         isInCheckCount++;
                         gameFrame.updateStatusMessage("黑方将红方", Color.BLACK, true);
                         messageShown = true;
                     }
                 }
-                currentCamp.nextTurn(); // 切换红黑
+                currentCamp.nextTurn(); //切换红黑
                 legalMoves.clear();
                 selectedPiece = null;
                 gameFrame.refreshLastMoveVisuals();
-                checkAndHandleGameOver(currentCamp, model); // 检查黑方是否将死/困毙
+                checkAndHandleGameOver(currentCamp, model); //检查黑方是否将死/困毙
 
                 if (!this.interactionEnabled) {
                     updateTurnLabel();
@@ -364,7 +364,7 @@ public class ChessBoardPanel extends JPanel {
                     updateTurnLabel();
                 }
 
-                // AI 触发逻辑修正：使用 invokeLater 确保状态稳定后再触发
+                //AI触发逻辑使用 invokeLater 确保状态稳定后再触发
                 if (useAI) {
                     if (AIAutoWarning.shouldBlackAISurrender(model, currentCamp)) {
                         handleAIResign();
@@ -433,7 +433,7 @@ public class ChessBoardPanel extends JPanel {
             // Show persistent message (no timer to fade it)
             mustDie++;
             gameFrame.updateStatusMessage(message, Color.RED, true);
-            gameFrame.hideGiveUpOption(); // 确保认输按钮隐藏
+            gameFrame.hideGiveUpOption();
             gameFrame.getEndUpPeaceButton().setEnabled(false);
 
         } else if (inCheck) {
@@ -442,8 +442,8 @@ public class ChessBoardPanel extends JPanel {
             gameFrame.showGiveUpOption(currentCampName);
             gameFrame.getEndUpPeaceButton().setEnabled(false);
         } else {
-            updateTurnLabel(); // 更新回合文字
-            gameFrame.hideGiveUpOption(); // 确保认输按钮隐藏
+            updateTurnLabel(); //更新回合文字
+            gameFrame.hideGiveUpOption();
         }
 
         if (eatintCount == 1 && mustDie == 0 && isInCheckCount == 0 && justMoveCount == 0) {
@@ -483,7 +483,7 @@ public class ChessBoardPanel extends JPanel {
         drawBoard(g2d);
         drawLastMoveHighlights(g2d);
         drawPieces(g2d);
-        drawLegalMoves(g);//new bulid
+        drawLegalMoves(g);
     }
 
     /**
@@ -491,20 +491,20 @@ public class ChessBoardPanel extends JPanel {
      */
     private void drawBoard(Graphics2D g) {
         g.setColor(Color.BLACK);
-        // 使用较粗的线条绘制主棋盘线
+        //使用较粗的线条绘制主棋盘线
         g.setStroke(new BasicStroke(3));
 
-        // --- L 形标记常量 ---
+        // L 形标记常量
         final int MARK_LENGTH = 12; // L 形标记单边长度
         final int MARK_GAP = 8;     // **L 形标记内角与棋盘交点的间隙增大 (原 MARK_OFFSET = 3)**
 
-        // 绘制横线
+        //绘制横线
         for (int i = 0; i < ChessBoardModel.getRows(); i++) {
             int y = MARGIN + i * CELL_SIZE;
             g.drawLine(MARGIN, y, MARGIN + (ChessBoardModel.getCols() - 1) * CELL_SIZE, y);
         }
 
-        // 绘制竖线
+        //绘制竖线
         for (int i = 0; i < ChessBoardModel.getCols(); i++) {
             int x = MARGIN + i * CELL_SIZE;
             if (i == 0 || i == ChessBoardModel.getCols() - 1) {
@@ -524,7 +524,7 @@ public class ChessBoardPanel extends JPanel {
         g.drawLine(MARGIN  + 3 * CELL_SIZE, MARGIN + 7 * CELL_SIZE, MARGIN + 5 * CELL_SIZE, MARGIN + 9 * CELL_SIZE);
 
 
-        // --- 绘制炮位和兵卒位的 L 形标记 ---
+        //绘制炮位和兵卒位的 L 形标记
         g.setStroke(new BasicStroke(3));
 
         // 标记点 (行, 列)
@@ -548,7 +548,7 @@ public class ChessBoardPanel extends JPanel {
 
             // 绘制 L 形标记的四个角（四个 90° 角）
 
-            // 1. 左上角 L
+            //左上角 L
             if (!isEdge || c != 0) {
                 // 绘制的内角点位于 (x - MARK_GAP, y - MARK_GAP) 处
                 // 横线 (向左延伸)
@@ -557,7 +557,7 @@ public class ChessBoardPanel extends JPanel {
                 g.drawLine(x - MARK_GAP, y - MARK_GAP, x - MARK_GAP, y - MARK_GAP - MARK_LENGTH);
             }
 
-            // 2. 右上角 L
+            //右上角 L
             if (!isEdge || c != ChessBoardModel.getCols() - 1) {
                 // 绘制的内角点位于 (x + MARK_GAP, y - MARK_GAP) 处
                 // 横线 (向右延伸)
@@ -566,7 +566,7 @@ public class ChessBoardPanel extends JPanel {
                 g.drawLine(x + MARK_GAP, y - MARK_GAP, x + MARK_GAP, y - MARK_GAP - MARK_LENGTH);
             }
 
-            // 3. 左下角 L
+            //左下角 L
             if (!isEdge || c != 0) {
                 // 绘制的内角点位于 (x - MARK_GAP, y + MARK_GAP) 处
                 // 横线 (向左延伸)
@@ -575,7 +575,7 @@ public class ChessBoardPanel extends JPanel {
                 g.drawLine(x - MARK_GAP, y + MARK_GAP, x - MARK_GAP, y + MARK_GAP + MARK_LENGTH);
             }
 
-            // 4. 右下角 L
+            //右下角 L
             if (!isEdge || c != ChessBoardModel.getCols() - 1) {
                 // 绘制的内角点位于 (x + MARK_GAP, y + MARK_GAP) 处
                 // 横线 (向右延伸)
@@ -585,7 +585,7 @@ public class ChessBoardPanel extends JPanel {
             }
         }
 
-        // --- 绘制“楚河”和“汉界”这两个文字 (保持不变) ---
+        //绘制“楚河”和“汉界”这两个文字 (保持不变)
         g.setColor(Color.BLACK);
         g.setFont(new Font("宋体", Font.BOLD, 30));
 
@@ -688,7 +688,7 @@ public class ChessBoardPanel extends JPanel {
 
 
     private void drawLegalMoves(Graphics g) {
-// 未选中棋子或无合法位置，直接返回
+    // 未选中棋子或无合法位置，直接返回
         if (selectedPiece == null || legalMoves.isEmpty()) {
             return;
         }
@@ -697,14 +697,14 @@ public class ChessBoardPanel extends JPanel {
         // 确保抗锯齿开启，获得平滑边缘
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // --- 移动点常量保持不变 ---
+        // 移动点常量保持不变
         final int MOVE_DOT_RADIUS = PIECE_RADIUS / 3;
         final Color MOVE_COLOR = new Color(50, 180, 255, 220);
         final int MOVE_RING_THICKNESS = 2;
 
-        // --- 瞄准镜常量更新：线段更突出圆环 ---
-        // 将偏移量增大，让线段更突出圆环
-        final int SCOPE_OFFSET = PIECE_RADIUS + 15;         // 线段起点到中心距离增大 (原为 +10)
+        //瞄准镜常量线段更突出圆环
+        //将偏移量增大，让线段更突出圆环
+        final int SCOPE_OFFSET = PIECE_RADIUS + 15;         //线段起点到中心距离增大)
         final int SCOPE_RING_RADIUS = PIECE_RADIUS + 9;    // 瞄准环的半径保持不变
         final int SCOPE_LINE_LENGTH = 10;
         final int SCOPE_THICKNESS = 3;
@@ -722,9 +722,9 @@ public class ChessBoardPanel extends JPanel {
             AbstractPiece targetPiece = model.getPieceAt(row, col);
 
             if (targetPiece == null) {
-                // --- 目标为空地：绘制醒目的实心圆点 + 外环 (保持不变) ---
+                //目标为空地：绘制醒目的实心圆点 + 外环
 
-                // 1. 绘制内部填充圆
+                //绘制内部填充圆
                 g2d.setColor(MOVE_COLOR);
                 g2d.fillOval(
                         centerX - MOVE_DOT_RADIUS,
@@ -733,7 +733,7 @@ public class ChessBoardPanel extends JPanel {
                         MOVE_DOT_RADIUS * 2
                 );
 
-                // 2. 绘制外部白色细环，增强可见度
+                //绘制外部白色细环，增强可见度
                 g2d.setColor(Color.WHITE);
                 g2d.setStroke(new BasicStroke(MOVE_RING_THICKNESS));
                 g2d.drawOval(
@@ -744,10 +744,10 @@ public class ChessBoardPanel extends JPanel {
                 );
 
             } else {
-                // --- 目标为敌方棋子：绘制瞄准目标图标 ---
+                //目标为敌方棋子：绘制瞄准目标图标
                 g2d.setColor(CAPTURE_COLOR);
 
-                // 1. 绘制外围圆环
+                //绘制外围圆环
                 g2d.setStroke(new BasicStroke(SCOPE_THICKNESS));
                 g2d.drawOval(
                         centerX - SCOPE_RING_RADIUS,
@@ -756,33 +756,33 @@ public class ChessBoardPanel extends JPanel {
                         SCOPE_RING_RADIUS * 2
                 );
 
-                // 2. 绘制水平和垂直的瞄准线（现在会更突出圆环）
+                //绘制水平和垂直的瞄准线（现在会更突出圆环）
 
-                // 左侧水平线
-                // 起点: centerX - SCOPE_OFFSET
-                // 终点: 起点 + SCOPE_LINE_LENGTH
+                //左侧水平线
+                //起点: centerX - SCOPE_OFFSET
+                //终点: 起点 + SCOPE_LINE_LENGTH
                 g2d.drawLine(centerX - SCOPE_OFFSET, centerY,
                         centerX - SCOPE_OFFSET + SCOPE_LINE_LENGTH, centerY);
 
-                // 右侧水平线
-                // 起点: centerX + SCOPE_OFFSET
-                // 终点: 起点 - SCOPE_LINE_LENGTH
+                //右侧水平线
+                //起点: centerX + SCOPE_OFFSET
+                //终点: 起点 - SCOPE_LINE_LENGTH
                 g2d.drawLine(centerX + SCOPE_OFFSET, centerY,
                         centerX + SCOPE_OFFSET - SCOPE_LINE_LENGTH, centerY);
 
-                // 上侧垂直线
+                //上侧垂直线
                 g2d.drawLine(centerX, centerY - SCOPE_OFFSET,
                         centerX, centerY - SCOPE_OFFSET + SCOPE_LINE_LENGTH);
-                // 下侧垂直线
+                //下侧垂直线
                 g2d.drawLine(centerX, centerY + SCOPE_OFFSET,
                         centerX, centerY + SCOPE_OFFSET - SCOPE_LINE_LENGTH);
 
-                // 恢复默认的细线
+                //恢复默认的细线
                 g2d.setStroke(new BasicStroke(1));
             }
         }
 
-        // 关闭抗锯齿
+        //关闭抗锯齿
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
     }
 
@@ -791,7 +791,7 @@ public class ChessBoardPanel extends JPanel {
         repaint(); // Trigger a redraw
     }
 
-    // 3. Helper method to calculate X/Y (You likely already have this logic, use yours)
+    // Helper method to calculate X/Y (You likely already have this logic, use yours)
     // This is just an example assuming you have 'cellSize' and 'margin'
     private int getX(int col) {
         // REPLACE THIS with your actual calculation logic
@@ -828,23 +828,22 @@ public class ChessBoardPanel extends JPanel {
         final int HIGHLIGHT_RADIUS = PIECE_RADIUS + 5;
         final int DIAMETER = HIGHLIGHT_RADIUS * 2;
 
-        // =========================================================================
-        // A. Draw PHANTOM PIECE at Start Position (Origin) - Unchanged
-        // =========================================================================
+
+        //Draw PHANTOM PIECE at Start Position (Origin) - Unchanged
         if (movedPiece != null) {
             // Set up high transparency for the phantom effect (Alpha: 0.25f)
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
 
-            // 1. Draw Phantom Circle Background
+            //Draw Phantom Circle Background
             g2d.setColor(new Color(245, 222, 179)); // Piece background
             g2d.fillOval(sX - PIECE_RADIUS, sY - PIECE_RADIUS, PIECE_RADIUS * 2, PIECE_RADIUS * 2);
 
-            // 2. Draw Phantom Circle Border (solid dark gray, high opacity)
+            //Draw Phantom Circle Border (solid dark gray, high opacity)
             g2d.setColor(Color.DARK_GRAY);
             g2d.setStroke(new BasicStroke(2.0f));
             g2d.drawOval(sX - PIECE_RADIUS, sY - PIECE_RADIUS, PIECE_RADIUS * 2, PIECE_RADIUS * 2);
 
-            // 3. Draw Phantom Piece Name
+            //Draw Phantom Piece Name
             g2d.setColor(movedPiece.isRed() ? new Color(200, 0, 0) : Color.BLACK);
             g2d.setFont(new Font("宋体", Font.BOLD, 28));
             FontMetrics fm = g2d.getFontMetrics();
@@ -852,10 +851,10 @@ public class ChessBoardPanel extends JPanel {
             int textHeight = fm.getAscent();
             g2d.drawString(movedPiece.getName(), sX - textWidth / 2, sY + textHeight / 2 - 2);
 
-            // Reset Composite/Opacity back to 1.0f for subsequent drawing
+            //Reset Composite/Opacity back to 1.0f for subsequent drawing
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
 
-            // 4. Draw a distinct dashed outline around the phantom piece
+            //Draw a distinct dashed outline around the phantom piece
             float[] dashPattern = {4f, 4f};
             Stroke dashedStroke = new BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f, dashPattern, 0.0f);
 
@@ -865,16 +864,15 @@ public class ChessBoardPanel extends JPanel {
         }
 
 
-        // =========================================================================
-        // B. Draw End Position (Striking BLUE Highlight)
-        // =========================================================================
+
+        // Draw End Position (Striking BLUE Highlight)
 
         // Define Blue Colors
         final Color BLUE_INNER = new Color(50, 150, 255, 150); // Bright Blue center
         final Color BLUE_OUTER = new Color(50, 150, 255, 0);   // Transparent edge
         final Color BLUE_RING = new Color(50, 150, 255, 255); // Solid Blue ring
 
-        // 1. Draw Radial Gradient (Blue)
+        //Draw Radial Gradient (Blue)
         g2d.setStroke(new BasicStroke(1.0f));
 
         RadialGradientPaint gradient = new RadialGradientPaint(
@@ -886,7 +884,7 @@ public class ChessBoardPanel extends JPanel {
         g2d.setPaint(gradient);
         g2d.fillOval(eX - HIGHLIGHT_RADIUS, eY - HIGHLIGHT_RADIUS, DIAMETER, DIAMETER);
 
-        // 2. Add a solid striking ring (Blue)
+        //Add a solid striking ring (Blue)
         g2d.setColor(BLUE_RING);
         g2d.setStroke(new BasicStroke(3.0f));
         g2d.drawOval(eX - HIGHLIGHT_RADIUS, eY - HIGHLIGHT_RADIUS, DIAMETER, DIAMETER);
@@ -896,15 +894,15 @@ public class ChessBoardPanel extends JPanel {
     private static class AIResult {
         AbstractPiece bestPiece;
         Point targetMove; // 单个走法（给AI对手用）
-        java.util.List<Point> bestMoves; // 多个建议走法（给提示系统用）
+        java.util.List<Point> bestMoves; // 多个建议走法
 
-        // 构造函数1：用于AI对手（单个走法）
+        //构造函数1：用于AI对手（单个走法）
         public AIResult(AbstractPiece bestPiece, Point targetMove) {
             this.bestPiece = bestPiece;
             this.targetMove = targetMove;
         }
 
-        // 构造函数2：用于自动提示（多个走法列表）
+        //构造函数2：用于自动提示（多个走法列表）
         public AIResult(AbstractPiece bestPiece, java.util.List<Point> bestMoves) {
             this.bestPiece = bestPiece;
             this.bestMoves = bestMoves;
@@ -925,27 +923,27 @@ public class ChessBoardPanel extends JPanel {
         // 仅在黑方回合时自动执行
         if (!currentCamp.isRedTurn()) {
             System.out.println("AI is thinking");
-            // 1. Ask AutoWarning for the best PIECE to move
+            //Ask AutoWarning for the best PIECE to move
             AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
 
             lockUIForAI();
             if (!currentCamp.isRedTurn()) {
                 System.out.println("AI is thinking (Background Thread)...");
 
-                // 1. 锁定界面（禁止点击棋盘、禁用按钮、设置等待光标）
+                //锁定界面（禁止点击棋盘、禁用按钮、设置等待光标）
                 lockUIForAI();
 
-                // 2. 使用 SwingWorker 在后台执行计算
+                //使用SwingWorker 在后台执行计算
                 SwingWorker<AIResult, Void> worker = new SwingWorker<>() {
                     @Override
                     protected AIResult doInBackground() throws Exception {
-                        // --- 耗时操作：在后台线程运行 AI 算法 ---
-                        // 1. Ask AutoWarning for the best PIECE to move
+                        //耗时操作：在后台线程运行AI算法
+                        // Ask AutoWarning for the best PIECE to move
                         AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
 
                         if (bestPiece != null) {
-                            // 2. Ask AutoWarning for the best MOVE
-                            // 注意：这里使用临时 list，避免修改 UI 线程使用的成员变量
+                            //Ask AutoWarning for the best MOVE
+                            //使用临时list，避免修改 UI 线程使用的成员变量
                             java.util.List<Point> tempAutoMoves = new ArrayList<>();
                             java.util.List<Point> tempAutoEat = new ArrayList<>();
 
@@ -957,14 +955,14 @@ public class ChessBoardPanel extends JPanel {
                                 return new AIResult(bestPiece, bestMoves.get(0));
                             }
                         }
-                        return null; // 没有找到合法走法
+                        return null; //没有找到合法走法
                     }
 
                     @Override
                     protected void done() {
                         try {
-                            // --- 恢复界面状态（先恢复，再操作，否则 handleMouseClick 可能会被拦截）---
-                            // 注意：为了安全，我们在下面操作前会先解除 lock，但也要防止操作中出现异常
+                            //恢复界面状态（先恢复，再操作，否则 handleMouseClick 可能会被拦截）
+                            //为了安全，在下面操作前会先解除 lock
                             unlockUIAfterAI();
 
                             //如果计算结束时用户已经关闭了 AI 模式，或者游戏结束，则不要落子
@@ -975,18 +973,17 @@ public class ChessBoardPanel extends JPanel {
                             AIResult result = get(); // 获取 doInBackground 的返回值
 
                             if (result != null) {
-                                // **模拟落子：在 EDT 线程安全地执行 UI 更新**
                                 // 为了让 handleMouseClick 能通过 check，这里 isAIThinking 已经被 unlockUIAfterAI 设为 false 了
                                 AbstractPiece bestPiece = result.bestPiece;
                                 int Row = result.targetMove.x;
                                 int Col = result.targetMove.y;
 
-                                // 1. 模拟第一次点击：选中棋子
+                                //模拟第一次点击：选中棋子
                                 int startX = getX(bestPiece.getCol());
                                 int startY = getY(bestPiece.getRow());
                                 handleMouseClick(startX, startY);
 
-                                // 2. 模拟第二次点击：执行移动
+                                //模拟第二次点击：执行移动
                                 int destX = getX(Col);
                                 int destY = getY(Row);
                                 handleMouseClick(destX, destY);
@@ -994,7 +991,7 @@ public class ChessBoardPanel extends JPanel {
                                 updateTurnLabel();
                                 repaint();
                             } else {
-                                // AI 找不到走法（认输逻辑）
+                                //AI找不到走法（认输逻辑）
                                 System.out.println("AI 找不到合法走法，触发游戏结束检查。");
                                 handleAIResign();
                             }
@@ -1002,7 +999,7 @@ public class ChessBoardPanel extends JPanel {
                         } catch (Exception ex) {
                             ex.printStackTrace();
                         } finally {
-                            // 兜底：确保一定解除了锁定状态
+                            //确保一定解除了锁定状态
                             if (isAIThinking) {
                                 isAIThinking = false;
                                 setCursor(Cursor.getDefaultCursor());
@@ -1010,8 +1007,7 @@ public class ChessBoardPanel extends JPanel {
                         }
                     }
                 };
-
-                // 启动后台线程
+                //启动后台线程
                 worker.execute();
             }
         }
@@ -1030,8 +1026,6 @@ public class ChessBoardPanel extends JPanel {
             gameFrame.getEndUpPeaceButton().setEnabled(false);
              gameFrame.getChangeinformation().setEnabled(false);
             gameFrame.getAIModel().setEnabled(false);
-            // 注意：不禁用 AIModel 按钮，允许用户中途取消人机模式（需要额外逻辑支持，目前暂且禁用防止状态错乱）
-            // gameFrame.getAIModel().setEnabled(false);
         }
     }
 
@@ -1039,7 +1033,7 @@ public class ChessBoardPanel extends JPanel {
         isAIThinking = false;
         setCursor(Cursor.getDefaultCursor());
         if (gameFrame != null) {
-            // 恢复基础按钮
+            //恢复基础按钮
             gameFrame.getRestartButton().setEnabled(true);
             gameFrame.getSaveAndOutButton().setEnabled(true);
             gameFrame.getChangeinformation().setEnabled(true);
@@ -1052,15 +1046,12 @@ public class ChessBoardPanel extends JPanel {
             boolean inCheck = model.isInCheck(currentCamp.isRedTurn());
 
             if (inCheck) {
-                // 如果被将军，确保认输按钮可见且可用
+                //如果被将军，确保认输按钮可见且可用
                 String name = currentCamp.isRedTurn() ? "红方" : "黑方";
                 gameFrame.showGiveUpOption(name);
                 gameFrame.getGiveUpButton().setEnabled(true); // 强制启用
-
-                // 通常被将军时不给求和
                 gameFrame.getEndUpPeaceButton().setEnabled(false);
             } else {
-                // 如果没被将军，通常隐藏认输按钮（或者根据你的需求保持显示）
                 gameFrame.hideGiveUpOption();
                 gameFrame.getGiveUpButton().setEnabled(true); // 强制启用
             }
@@ -1070,7 +1061,7 @@ public class ChessBoardPanel extends JPanel {
     private void handleAIResign() {
         String message = "黑方投降！";
         gameFrame.updateStatusMessage(message, Color.BLUE, true);
-        this.setGameInteractionEnabled(false); // 禁用交互
+        this.setGameInteractionEnabled(false); //禁用交互
         gameFrame.addRedCampScore();
         gameFrame.updateScoreLabel();
         gameFrame.addCoinsOnWin();
@@ -1091,7 +1082,7 @@ public class ChessBoardPanel extends JPanel {
     }
     public void setUseAI(boolean useAI) {
         this.useAI = useAI;
-        // 如果开启了 AI，且当前是黑方回合，且 AI 当前没有在思考，则立即启动
+        //如果开启了 AI，且当前是黑方回合，且 AI 当前没有在思考，则立即启动
         if (useAI && !currentCamp.isRedTurn() && !isAIThinking && interactionEnabled) {
             autoAIdoing();
         }
@@ -1101,7 +1092,7 @@ public class ChessBoardPanel extends JPanel {
         boolean isCurrentPlayerRed = currentCamp.isRedTurn();
         String player = isCurrentPlayerRed ? "红方" : "黑方";
 
-        // 1. 检查前提条件：游戏运行中，非 AI 模式，警告功能开启
+        //检查前提条件，游戏运行中，非 AI 模式，警告功能开启
         if (!interactionEnabled) return;
         if (useAI && !currentCamp.isRedTurn()) return;
 
@@ -1110,20 +1101,17 @@ public class ChessBoardPanel extends JPanel {
             selectedPiece = null;
             legalMoves.clear();
             repaint();
-            // 注意：这里不需要重启计时器，因为用户可能正在操作。
-            // 只有当用户再次长时间不操作（再次选中 null）时，handleMouseClick 会重启计时器。
             return;
         }
 
         System.out.println("5 seconds inactivity detected - Starting Background Calc for " + player + "...");
 
-        // 2. 暂停计时器，避免计算期间重复触发
+        //暂停计时器，避免计算期间重复触发
         if (idleTimer.isRunning()) {
             idleTimer.stop();
         }
 
-        // 3. 为了线程安全，创建 ChessBoardModel 的深拷贝供后台线程使用
-        // 这样即使主线程UI发生了重绘或非结构性变动，也不会导致并发异常
+        //为了线程安全，创建 ChessBoardModel 的深拷贝供后台线程使用
         final ChessBoardModel modelForWorker = model.deepCopy();
         final CurrentCamp campForWorker = new CurrentCamp();
 
@@ -1132,11 +1120,11 @@ public class ChessBoardPanel extends JPanel {
             campForWorker.nextTurn();
         }
 
-        // 4. 创建 SwingWorker 后台计算
+        //创建 SwingWorker 后台计算
         warningWorker = new SwingWorker<>() {
             @Override
             protected AIResult doInBackground() throws Exception {
-                // 在后台线程中进行耗时计算
+                //在后台线程中进行耗时计算
                 AbstractPiece bestPiece = AIAutoWarning.warningPiece(modelForWorker, campForWorker);
 
                 if (bestPiece != null) {
@@ -1146,8 +1134,8 @@ public class ChessBoardPanel extends JPanel {
                     java.util.List<Point> bestMoves = AIAutoWarning.chooseToMoveOrEat(modelForWorker, bestPiece, campForWorker, tempAutoMoves, tempAutoEat);
 
                     if (!bestMoves.isEmpty()) {
-                        // 找到原来的棋子对象（因为 bestPiece 属于 modelForWorker，我们需要映射回主线程的 model）
-                        // 简单的做法是：根据行和列在主 model 中找
+                        //找到原来的棋子对象（因为 bestPiece 属于 modelForWorker，我们需要映射回主线程的 model）
+                        //简单的做法是：根据行和列在主 model 中找
                         return new AIResult(bestPiece, bestMoves);
                     }
                 }
@@ -1157,36 +1145,36 @@ public class ChessBoardPanel extends JPanel {
             @Override
             protected void done() {
                 try {
-                    // 检查是否被取消（例如用户点击了棋盘）
+                     //检查是否被取消（例如用户点击了棋盘）
                     if (isCancelled()) {
                         System.out.println("Warning calculation cancelled by user.");
-                        return; // 被取消了，不需要做任何 UI 更新
+                        return; //被取消了，不需要做任何 UI 更新
                     }
 
                     AIResult result = get();
 
-                    // 再次检查前置条件：确保游戏还在进行，且没有用户选中的棋子
+                    //再次检查前置条件：确保游戏还在进行，且没有用户选中的棋子
                     if (!interactionEnabled || selectedPiece != null) {
-                        // 如果环境变了，不做操作，重启计时器等待下一次机会
+                        //如果环境变了，不做操作，重启计时器等待下一次机会
                         if (interactionEnabled) idleTimer.restart();
                         return;
                     }
 
                     if (result != null) {
-                        // 将结果映射回主 UI 的 model
-                        // 因为 result.bestPiece 是深拷贝里的对象，我们需要找到主 model 对应位置的棋子
+                        //将结果映射回主 UI 的 model
+                        //因为 result.bestPiece 是深拷贝里的对象，我们需要找到主 model 对应位置的棋子
                         AbstractPiece realPiece = model.getPieceAt(result.bestPiece.getRow(), result.bestPiece.getCol());
 
                         if (realPiece != null && realPiece.isRed() == currentCamp.isRedTurn()) {
-                            // 3. 模拟选中最佳棋子
+                            //模拟选中最佳棋子
                             selectedPiece = realPiece;
 
-                            // 4. 计算该棋子的所有合法走法，并用 AI 推荐的走法覆盖显示
+                            //计算该棋子的所有合法走法，并用 AI 推荐的走法覆盖显示
                             calculateLegalMoves(realPiece); // 先计算基础合法走法
                             legalMoves.clear();
                             legalMoves.addAll(result.bestMoves); // 仅显示 AI 推荐的
 
-                            // 记录自动移动路径供参考（如果需要）
+                            //记录自动移动路径供参考（如果需要）
                             autoMoves.clear();
                             autoEat.clear();
 
@@ -1194,13 +1182,11 @@ public class ChessBoardPanel extends JPanel {
                             gameFrame.updateStatusMessage(player + "：建议走法已显示", Color.MAGENTA, false);
                             AudioPlayer.playSound("src/main/resources/Audio/落子.wav");
                             repaint();
-                            // 成功显示提示后，不需要立即重启计时器，直到用户进行操作（点击）
+                            //成功显示提示后，不需要立即重启计时器，直到用户进行操作（点击）
                         } else {
-                            // 找不到对应棋子（罕见情况），重试
                             idleTimer.restart();
                         }
                     } else {
-                        // 计算完成但没有结果（null），重新开始计时
                         idleTimer.restart();
                     }
                 } catch (Exception e) {
@@ -1208,7 +1194,7 @@ public class ChessBoardPanel extends JPanel {
                     // 出错也重启计时器
                     if (interactionEnabled) idleTimer.restart();
                 } finally {
-                    warningWorker = null; // 清理引用
+                    warningWorker = null;
                 }
             }
         };
@@ -1227,7 +1213,7 @@ public class ChessBoardPanel extends JPanel {
                 String message = loser + " 被将死！" + winner + "胜利！";
 
                 gameFrame.updateStatusMessage(message, Color.BLUE, true);
-                this.setGameInteractionEnabled(false); // 禁用交互
+                this.setGameInteractionEnabled(false); //禁用交互
                 if (currentCamp.isRedTurn()) {
                     gameFrame.addBlackCampScore();;
                     gameFrame.updateScoreLabel();
@@ -1254,7 +1240,7 @@ public class ChessBoardPanel extends JPanel {
             else {
                 String message = "困毙！！";
                 gameFrame.updateStatusMessage(message, Color.BLUE, true);
-                this.setGameInteractionEnabled(false); // 禁用交互
+                this.setGameInteractionEnabled(false); //禁用交互
                 if (currentCamp.isRedTurn()) {
                     gameFrame.addBlackCampScore();;
                     gameFrame.updateScoreLabel();

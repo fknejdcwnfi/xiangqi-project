@@ -164,13 +164,12 @@ public class ChessBoardModel implements Serializable {
 
     public AbstractPiece findGeneral(boolean isRed) {
         for (AbstractPiece piece : getPieces()) {
-            // 假设帅/将的name是“帅”或“将”，或通过类型判断（如GeneralPiece）
             if ( (piece.getName().equals("帅") || piece.getName().equals("將"))
                     && piece.isRed() == isRed) {
                 return piece;
             }
         }
-        return null; // 理论上不会出现，游戏中帅/将必存在
+        return null;
     }
 
     /**
@@ -187,9 +186,6 @@ public class ChessBoardModel implements Serializable {
 
         AbstractPiece opponentGeneral = findGeneral(!isRedTurn);
         if (general == null || opponentGeneral == null) return false;
-        // ----------------------------------------------------
-        // *** CRITICAL FIX: General Face-Off (Flying General) Check ***
-        // ----------------------------------------------------
         int genRow = general.getRow();
         int genCol = general.getCol();
         int oppRow = opponentGeneral.getRow();
@@ -211,17 +207,17 @@ public class ChessBoardModel implements Serializable {
                 return true;
             }
         }
-        //==============================================================
 
-        // 2. 遍历对方所有棋子，检查是否能移动到帅/将位置
+
+        //遍历对方所有棋子，检查是否能移动到将位置
         boolean isRedGeneral = general.isRed();
         for (AbstractPiece attacker : getPieces()) {
-            // 只检查对方棋子（红帅被黑棋攻击，黑将被红棋攻击）
+            //只检查对方棋子
             if (attacker.isRed() == isRedGeneral) continue;
-            // 关键：调用棋子的canMoveTo，判断是否能攻击帅/将
+            //调用棋子的canMoveTo，判断是否能攻击将
             if (attacker.canMoveTo(genRow, genCol, this)) {
                 //ChessBoardPanel.setStatusMessage();
-                return true; // 存在能攻击帅/将的棋子，判定为将军
+                return true; // 存在能攻击将的棋子，判定为将军
             }
         }
         return false;
@@ -229,7 +225,7 @@ public class ChessBoardModel implements Serializable {
 
     public ChessBoardModel deepCopy() {
         ChessBoardModel copy = new ChessBoardModel();
-        // 复制所有棋子（需确保AbstractPiece实现Cloneable）
+        //复制所有棋子
 
         copy.pieces.clear();//"Ghost" Pieces?
 

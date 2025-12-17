@@ -62,12 +62,12 @@ public class LoginFrame extends JFrame{
         // 初始化登录面板并添加到背景面板
         BackgroundPanel backgroundPanel = new BackgroundPanel();
         this.setContentPane(backgroundPanel);
-        // 最后启用布局并刷新
-        // 1. 先初始化背景面板和登录组件
+        //最后启用布局并刷新
+        //先初始化背景面板和登录组件
         this.loginPanel = new LoginPanel();
-        this.loginPanel.setOpaque(false); // 关键：LoginPanel透明，显示背景图
-        this.loginPanel.setBounds(0, 0, 500, 500); // 关键：手动指定LoginPanel的位置和大小（和窗口一致
-        backgroundPanel.add(this.loginPanel, BorderLayout.CENTER); // 指定布局位置
+        this.loginPanel.setOpaque(false); //LoginPanel透明，显示背景图
+        this.loginPanel.setBounds(0, 0, 500, 500); //指定LoginPanel的位置和大小和窗口一致
+        backgroundPanel.add(this.loginPanel, BorderLayout.CENTER); //指定布局位置
         // 初始化其他窗口（原有逻辑不变）
 
 
@@ -87,13 +87,10 @@ public class LoginFrame extends JFrame{
                     String inputUsername = loginPanel.getUsername();//Capture the name here
 
                     if(enterpassword(loginPanel.getPassword(),enteruser(loginPanel.getUsername()))){//密码正确
+
                         this.setVisible(false);
-
                         //=================================================================
-                        //initialize GameFrame using the successful uername
                         this.gameFrame = new GameFrame(inputUsername);
-
-                        //set up listeners for the new instance
                         setupGameFrameListeners();
                         //=================================================================
 
@@ -157,15 +154,14 @@ public class LoginFrame extends JFrame{
                         Nicknamewrite.close();
                         Passwordwrite.close();
 
-                        // 注册成功，显示提示并设置延时跳转
-                        //this text is created but not visible
+                        //注册成功，显示提示并设置延时跳转
                         signinFrame.getConfirmsuscess().setText("注册成功！"); // 假设 Confirmsuscess 是成功的提示标签
 
-                        // 关键：Timer 的action 将执行跳转
+                        //延时跳转
                         Timer jumpTimer = new Timer(500, new ActionListener() {//this is the same to a object and use it on the code below.
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                // --- 延时 0.5 秒后才执行的跳转逻辑 ---
+                                //延时跳转
                                 signinFrame.getConfirmsuscess().setVisible(false);
 
                                 //create the GameFrame======================================
@@ -181,14 +177,13 @@ public class LoginFrame extends JFrame{
                                 LoginFrame.this.gameFrame.setLocationRelativeTo(null);
                                 LoginFrame.this.gameFrame.setVisible(true);
                                 LoginFrame.this.signinFrame.setVisible(false);
-                                // --- 延时跳转逻辑结束 ---
                                 ((Timer) e.getSource()).stop();
                             }
                         });
 
                         jumpTimer.setRepeats(false);
-                        signinFrame.getConfirmsuscess().setVisible(true); // 立即显示成功提示
-                        jumpTimer.start();              // 启动延时跳转
+                        signinFrame.getConfirmsuscess().setVisible(true);
+                        jumpTimer.start();
 
                     }catch(IOException e1){
                         System.out.println("无法写入相应文件");
@@ -196,7 +191,7 @@ public class LoginFrame extends JFrame{
                         TimeForDisplayAndLater.displayAndHideJLabel(signinFrame.getConfirmsuscess(), 500); // 提示写入失败
                     }
 
-                } else if(rightname(signinFrame.getYourNameTextField())) { // 昵称正确，但密码错误////////////////////////////////////
+                } else if(rightname(signinFrame.getYourNameTextField())) { // 昵称正确，但密码错误
                 // 密码输入过短
                 TimeForDisplayAndLater.displayAndHideJLabel(signinFrame.getErrorOne(),500);
 
@@ -228,20 +223,19 @@ public class LoginFrame extends JFrame{
         //改变密码的相关代码
         changePasswordFrame.getChangePasswordButton().addActionListener(e->{
             AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
-            // 1. 获取用户索引
+            //获取用户索引
             int userIndex = InterChecking.enteruser(changePasswordFrame.theUserNameText());
 
-            // 2. 验证：用户存在 && 旧密码正确 && 新密码格式正确
+            //验证：用户存在 && 旧密码正确 && 新密码格式正确
             if (userIndex >= 0
                     && InterChecking.enterpassword(changePasswordFrame.getOldPassword(), userIndex)
                     && SignInChecking.passworkcheck(changePasswordFrame.getNewPassword())) {
 
-                // 3. 执行修改文件操作 (调用上面写好的工具方法)
-                // 注意：这里调用的是新写的方法 updatePasswordInFile
+                //执行修改文件操作
                 boolean updateSuccess = updatePasswordInFile(userIndex, changePasswordFrame.getNewPassword());
 
                 if (updateSuccess) {
-                    // 4. UI 反馈
+                    //UI 反馈
                     TimeForDisplayAndLater.displayAndHideJLabel(changePasswordFrame.getsusTochangePassword(), 800);
                     TimeForDisplayAndLater.onlyHideFrame(changePasswordFrame, 1000);
                     TimeForDisplayAndLater.onlyDisplayFrame(this, 1000);
@@ -255,7 +249,6 @@ public class LoginFrame extends JFrame{
         });
     }
 
-    //把所有相应器都放到这里了
     //把所有相应器都放到这里了
     private void setupGameFrameListeners() {
         // =====================================================================
@@ -289,8 +282,7 @@ public class LoginFrame extends JFrame{
         });
 
 
-        // 2. Game frame change information button
-        //=====================================================
+        //Game frame change information button
         gameFrame.getChangeinformation().addActionListener(e->{
             AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
             AudioPlayer.stopLoopingSound("src/main/resources/Audio/斗地主.wav");
@@ -305,10 +297,9 @@ public class LoginFrame extends JFrame{
             changePasswordFrame.setVisible(true);
             gameFrame.setVisible(false);
         });
-        //=====================================================
 
 
-        // 3. Game frame return from password change (already defined)
+        //Game frame return from password change (already defined)
         changePasswordFrame.getReturnToTheGame().addActionListener(e->{
             AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
             AudioPlayer.stopLoopingSound("src/main/resources/Audio/我的歌声里.wav");
@@ -317,7 +308,7 @@ public class LoginFrame extends JFrame{
             gameFrame.setVisible(true);
         });
 
-        // 4. Save and Exit button
+        //Save and Exit button
         gameFrame.getSaveAndOutButton().addActionListener(e->{
             AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
             gameFrame.stopGameTimer();
@@ -331,7 +322,7 @@ public class LoginFrame extends JFrame{
             gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         });
 
-        //5. 悔棋的响应器
+        //悔棋的响应器
         gameFrame.getTakeBackAMove().addActionListener(e->{
             AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
             ChessBoardModel model = gameFrame.getActiveSession().getChessBoardModel();
@@ -343,7 +334,7 @@ public class LoginFrame extends JFrame{
                 return;
             }
             if (!gameFrame.getIsTourist()) { // 非游客（登录用户）
-                // 检查金币是否≥1，不足则提示并终止操作
+                // 检查金币是否>=1，不足则提示并终止操作
                 if (gameFrame.getCoins() < 1) {
                     gameFrame.updateStatusMessage("金币不足,无法悔棋！", Color.RED, false);
                     gameFrame.getActiveSession().setCoins(gameFrame.getCoins());
@@ -403,9 +394,9 @@ public class LoginFrame extends JFrame{
         gameFrame.getStartButton().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
-                // a. 启用棋盘交互
+                //启用棋盘交互
                 gameFrame.getBoardPanel().setGameInteractionEnabled(true);
-                // b. 禁用“点击开始”按钮，防止重复点击，同时提示用户已开始
+                //禁用“点击开始”按钮，防止重复点击，同时提示用户已开始
                 gameFrame.getStartButton().setEnabled(false);
                 AudioPlayer.playSound("src/main/resources/Audio/游戏开始.wav");
                 if (!gameFrame.getRestartButton().isEnabled()) {
@@ -506,20 +497,20 @@ public class LoginFrame extends JFrame{
             public void actionPerformed(ActionEvent e) {
                 AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
                 if (gameFrame.getAIModel().getText().equals("黑方人机模式")) {
-                    // 切换到：AI 自动落子模式 (人机模式)
+                    //切换到AI自动落子模式(人机模式)
                     gameFrame.getBoardPanel().setUseAI(true);
                     gameFrame.getAIModel().setText("停止人机模式");
 
-                    // 启动 AI 自动落子（如果当前是黑方回合）
+                    //启动AI自动落子（如果当前是黑方回合）
                     if (gameFrame.getBoardPanel().getInteractionEnabled()) {
                         gameFrame.getBoardPanel().setGameInteractionEnabled(true);
                     }
                 } else {
-                    // 切换到：人类对战模式 (关闭 AI 自动落子)
+                    //切换人类对战模式 (关闭AI自动落子)
                     gameFrame.getBoardPanel().setUseAI(false);
                     gameFrame.getAIModel().setText("黑方人机模式");
 
-                    // 重新启动警告计时器（如果游戏在进行）
+                    //重新启动警告计时器（如果游戏在进行）
                     if (gameFrame.getBoardPanel().getInteractionEnabled()) {
                         gameFrame.getBoardPanel().setGameInteractionEnabled(true);
                     }

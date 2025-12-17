@@ -57,11 +57,11 @@ public abstract class AbstractPiece implements Serializable,Cloneable,Comparable
      */
     public abstract boolean canMoveTo(int targetRow, int targetCol, ChessBoardModel model);
 
-    // 重写clone方法
+    //重写clone方法
     @Override
     public Object clone() {
         try {
-            return super.clone(); // 浅克隆足够应对当前成员变量
+            return super.clone(); //浅克隆足够应对当前成员变量
         } catch (CloneNotSupportedException e) {
             throw new AssertionError("克隆失败", e);
         }

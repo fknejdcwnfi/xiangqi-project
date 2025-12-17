@@ -131,7 +131,6 @@ public class AIAutoWarning {
                     continue;
                 }
 
-                // --- Simulation Start ---
                 ChessBoardModel currentModel = chessBoardModel.deepCopy();
                 AbstractPiece currentPieceInCopy = currentModel.getPieceAt(abstractPiece.getRow(), abstractPiece.getCol());
 
@@ -151,10 +150,10 @@ public class AIAutoWarning {
 
                 int moveScore;
                 try {
-                    currentCamp.nextTurn(); // 临时切换到对手的回合
+                    currentCamp.nextTurn(); //临时切换到对手的回合
                     moveScore = miniMaxValue(currentModel, currentCamp, MAX_DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE);
                 } finally {
-                    currentCamp.returnTurn(); // 确保状态恢复
+                    currentCamp.returnTurn(); //确保状态恢复
                 }
 
                 if (isCurrentPlayerRed) {
@@ -172,7 +171,7 @@ public class AIAutoWarning {
         if (isCurrentPlayerRed) {
             return (bestMoveScore == Integer.MIN_VALUE) ? -5000 : bestMoveScore;
         } else {
-            // 如果是黑方，找不到合法走法时返回一个极大的正值作为惩罚
+            //如果是黑方找不到合法走法时返回一个极大的正值作为惩罚
             return (bestMoveScore == Integer.MAX_VALUE) ? 5000 : bestMoveScore;
      }
     }
@@ -298,7 +297,7 @@ public class AIAutoWarning {
         return score;
     }
 
-    //the core AI method !
+    //极大极小值方法
     private static int miniMaxValue(ChessBoardModel model, CurrentCamp camp, int depth, int alpha, int beta) {
         boolean isCurrentPlayerRed = camp.isRedTurn();
 
@@ -308,10 +307,10 @@ public class AIAutoWarning {
             int finalMateScore = MATE_BASE_SCORE + (MAX_DEPTH + 1) - depth;
 
             if (isCurrentPlayerRed) {
-                // 轮到红方走，红方被将死：返回极小负分
+                //轮到红方,走红方被将死返回极小负分
                 return -finalMateScore;
             } else {
-                // 轮到黑方走，黑方被将死：返回极大正分（红方视角）
+                //轮到黑方走,黑方被将死返回极大正分（红方视角）
                 return finalMateScore;
             }
         }
@@ -335,7 +334,6 @@ public class AIAutoWarning {
                         continue;
                     }
 
-                    // --- 走子模拟并检查自杀（送将） ---
                     ChessBoardModel nextModel = model.deepCopy();
                     AbstractPiece currentPieceInCopy = nextModel.getPieceAt(piece.getRow(), piece.getCol());
                     AbstractPiece targetPieceInCopy = nextModel.getPieceAt(row, col);
@@ -350,21 +348,20 @@ public class AIAutoWarning {
                         continue;
                     }
 
-                    // 计算走法优先级分数
                     int priorityScore = getMovePriorityScore(model, piece, row, col, camp);
 
                     potentialMoves.add(new Move(new Point(piece.getRow(), piece.getCol()), new Point(row, col), priorityScore));
                 }
             }
         }
-        // 2. 对走法进行排序：优先级分数高的走法排在前面
+        //对走法进行排序,优先级分数高的走法排在前面
         potentialMoves.sort(Comparator.comparingInt(move -> move.priorityScore));
         java.util.Collections.reverse(potentialMoves); // 降序排列
 
         int bestEval = isCurrentPlayerRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
         for (Move move : potentialMoves) {
-// 重新模拟走法（使用排序后的走法信息）
+        // 重新模拟走法（使用排序后的走法信息）
             ChessBoardModel nextModel = model.deepCopy();
             AbstractPiece pieceToMove = nextModel.getPieceAt(move.start.y, move.start.x);
             AbstractPiece target = nextModel.getPieceAt(move.end.y, move.end.x);
@@ -376,11 +373,9 @@ public class AIAutoWarning {
                 nextModel.movePieceForce(pieceToMove, move.end.y, move.end.x);
             }
 
-            // 递归调用（重点修正！）
             int eval;
             try {
                 camp.nextTurn();
-                // *** 修正了两个关键错误：使用 nextModel 和 depth - 1 ***
                 eval = miniMaxValue(nextModel, camp, depth - 1, alpha, beta);
             } finally {
                 camp.returnTurn();
@@ -401,12 +396,12 @@ public class AIAutoWarning {
 
         if (isCurrentPlayerRed) {
             if (bestEval == Integer.MIN_VALUE) {
-                // 红方（MAX）找不到合法走法，返回一个极差的惩罚分（小于将死分）
+                // 红方（MAX）找不到合法走法,返回一个极差的惩罚分（小于将死分）
                 return -10000;
             }
         } else {
             if (bestEval == Integer.MAX_VALUE) {
-                // 黑方（MIN）找不到合法走法，返回一个极好的奖励分（红方视角，小于将死分）
+                // 黑方（MIN）找不到合法走法,返回一个极好的奖励分（红方视角，小于将死分）
                 return 10000;
             }
         }
@@ -430,13 +425,11 @@ public class AIAutoWarning {
             for (int row = 0; row < model.getRows(); row++) {
                 for (int col = 0; col < model.getCols(); col++) {
 
-                    // 排除不合法的走法（例如走到了自己棋子的位置）
                     AbstractPiece target = model.getPieceAt(row, col);
                     if (!piece.canMoveTo(row, col, model) || (target != null && target.isRed() == isCurrentPlayerRed)) {
                         continue;
                     }
 
-                    // 3. 模拟走法
                     ChessBoardModel nextModel = model.deepCopy();
                     AbstractPiece currentPieceInCopy = nextModel.getPieceAt(piece.getRow(), piece.getCol());
                     AbstractPiece targetPieceInCopy = nextModel.getPieceAt(row, col);
@@ -471,7 +464,6 @@ public class AIAutoWarning {
         ChessBoardModel nextModel = model.deepCopy();
         AbstractPiece currentPieceInCopy = nextModel.getPieceAt(piece.getRow(), piece.getCol());
 
-        // 模拟吃子和移动 (与 miniMaxValue 中的逻辑相同)
         if (target != null) {
             AbstractPiece targetPieceInCopy = nextModel.getPieceAt(targetRow, targetCol);
             if (targetPieceInCopy != null) {
@@ -482,12 +474,11 @@ public class AIAutoWarning {
             nextModel.movePieceForce(currentPieceInCopy, targetRow, targetCol);
         }
 
-        // 使用 try-finally 块确保 camp 状态安全恢复 (P1 优化)
         try {
-            camp.nextTurn(); // 临时切换到对手回合
+            camp.nextTurn();//临时切换到对手回合
 
             if (nextModel.isInCheck(camp.isRedTurn())) {
-                // P2: 将军得分 (9000分，高于所有吃子走法)
+                //将军得分9000分
                 score += 9000;
 
                 // P1: 将死检查 (Checkmate Score)
@@ -497,7 +488,7 @@ public class AIAutoWarning {
                 }
             }
         } finally {
-            camp.returnTurn(); // 恢复回合状态
+            camp.returnTurn(); //恢复回合状态
         }
         return score;
     }
@@ -518,16 +509,16 @@ public class AIAutoWarning {
             }
         }
 
-        // 如果黑方棋子为空，则已经输了，无需投降
+        //如果黑方棋子为空则已经输了,无需投降
         if (myPieces.isEmpty()) {
             return false;
         }
 
 
         for (AbstractPiece piece : myPieces) {
-            // pieceTotalMoveCount 返回的是该棋子能达到的最低分数
+            //pieceTotalMoveCount 返回的是该棋子能达到的最低分数
             int pieceBestMoveScore = pieceTotalMoveCount(chessBoardModel, piece, currentCamp);
-            // 黑方 (MIN player) 寻找所有走法中的最小分数（即对黑方最好的结果）
+            //黑方(MIN player)寻找所有走法中的最小分数（即对黑方最好的结果）
             bestPossibleScoreForBlack = Math.min(bestPossibleScoreForBlack, pieceBestMoveScore);
         }
 

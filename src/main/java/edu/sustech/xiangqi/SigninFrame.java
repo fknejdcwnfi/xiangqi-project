@@ -21,7 +21,7 @@ public class SigninFrame extends JFrame {
     private BackgroundPanel backgroundPanel;
 
 
-    // 独立背景面板类（复用LoginFrame的背景逻辑）
+    // 独立背景面板类
     static class BackgroundPanel extends JPanel {
         private Image backgroundImage;
         public BackgroundPanel() {
@@ -46,7 +46,6 @@ public class SigninFrame extends JFrame {
         backgroundPanel = new BackgroundPanel();
         this.setContentPane(backgroundPanel);
 
-        // 复用LoginPanel，修改文本适配注册场景
         this.setLayout(null);
         this.setVisible(false);
         returnButton = new AncientButton("返回");
@@ -65,7 +64,6 @@ public class SigninFrame extends JFrame {
         //用户名的设置框架（注册框的那个空格）
 
         yourNameTextField = new JTextField();
-        // 设置加粗边框：宽度设为2（或更大），颜色匹配界面风格
         yourNameTextField.setBorder(BorderFactory.createLineBorder(new Color(139, 69, 19), 2)); // 深棕色+2px粗边框
         yourNameTextField.setSize(150, 25);
         yourNameTextField.setLocation(190, 130);
@@ -73,7 +71,7 @@ public class SigninFrame extends JFrame {
 
         //用户名的设置框架（注册框的标签）
         yourNameLabel = new JLabel("昵称：");
-        yourNameLabel.setFont(new Font("华文行楷", Font.PLAIN, 14)); // 14磅
+        yourNameLabel.setFont(new Font("华文行楷", Font.PLAIN, 14));
         yourNameLabel.setSize(100, 50);
         yourNameLabel.setLocation(150, 120);
         this.add(yourNameLabel);
@@ -87,20 +85,20 @@ public class SigninFrame extends JFrame {
 
         //密码标签（注册的密码框）
         yourPasswordLabel= new JLabel("密码：");
-        yourPasswordLabel.setFont(new Font("华文行楷", Font.PLAIN, 14)); // 14磅
+        yourPasswordLabel.setFont(new Font("华文行楷", Font.PLAIN, 14));
         yourPasswordLabel.setSize(100, 50);
         yourPasswordLabel.setLocation(150, 180);
         this.add(yourPasswordLabel);
 
 
         confirmPasswordButton = new AncientButton("注册");
-        confirmPasswordButton.setFont(new Font("华文行楷", Font.BOLD, 16)); // 16磅，粗体
+        confirmPasswordButton.setFont(new Font("华文行楷", Font.BOLD, 16));
         confirmPasswordButton.setSize(100, 50);
         confirmPasswordButton.setLocation(150, 350);
         this.add(confirmPasswordButton);
 
         Confirmsuscess = new JLabel("确认成功");
-        Confirmsuscess.setFont(new Font("华文行楷", Font.PLAIN, 12)); // 12磅
+        Confirmsuscess.setFont(new Font("华文行楷", Font.PLAIN, 12));
         Confirmsuscess.setForeground(Color.BLUE); // 成功提示用蓝色
         Confirmsuscess.setSize(200, 50);
         Confirmsuscess.setLocation(230, 280);
@@ -108,24 +106,24 @@ public class SigninFrame extends JFrame {
         Confirmsuscess.setVisible(false);
 
         errorOne = new JLabel("密码输入过短");
-        errorOne.setFont(new Font("华文行楷", Font.PLAIN, 12)); // 12磅
-        errorOne.setForeground(Color.BLUE); // 成功提示用蓝色
+        errorOne.setFont(new Font("华文行楷", Font.PLAIN, 12));
+        errorOne.setForeground(Color.BLUE);
         errorOne.setSize(200, 50);
         errorOne.setLocation(210, 280);
         this.add(errorOne);
         errorOne.setVisible(false);
 
         errorTwo = new JLabel("用户名不合法或已有其他玩家使用");
-        errorTwo.setFont(new Font("华文行楷", Font.PLAIN, 12)); // 12磅
-        errorTwo.setForeground(Color.BLUE); // 成功提示用蓝色
+        errorTwo.setFont(new Font("华文行楷", Font.PLAIN, 12));
+        errorTwo.setForeground(Color.BLUE);
         errorTwo.setSize(200, 50);
         errorTwo.setLocation(160, 280);
         this.add(errorTwo);
         errorTwo.setVisible(false);
 
         errorThree = new JLabel("昵称和密码都不符合规定");
-        errorThree.setFont(new Font("华文行楷", Font.PLAIN, 12)); // 12磅
-        errorThree.setForeground(Color.BLUE); // 成功提示用蓝色
+        errorThree.setFont(new Font("华文行楷", Font.PLAIN, 12));
+        errorThree.setForeground(Color.BLUE);
         errorThree.setSize(200, 50);
         errorThree.setLocation(180, 280);
         this.add(errorThree);

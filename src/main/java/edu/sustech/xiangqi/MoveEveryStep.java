@@ -33,7 +33,7 @@ public class MoveEveryStep implements Serializable {
      //target是目标位置的棋子（如果空的话则表示空位一）
  }
 
- //添加getter来获取信息
+
     public String getMoveDescription() {
      String camp = isRed ? "红方" : "黑方";
      String action = capturedPieceName != null ? "吃掉" + capturedPieceName : "移动";
