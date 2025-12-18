@@ -38,7 +38,7 @@ public class LoginFrame extends JFrame{
             if (imgUrl != null) {
                 backgroundImage = new ImageIcon(imgUrl).getImage();
             } else {
-                System.out.println("背景图路径错误！");
+
             }
             setLayout(null); // 和原有布局保持一致
             setPreferredSize(new Dimension(500, 500)); // 匹配窗口大小
@@ -118,9 +118,9 @@ public class LoginFrame extends JFrame{
                 }
             });
         } catch (FileNotFoundException e) {
-            System.out.println("操作错误1");
+
         } catch (IOException e) {
-            System.out.println("操作错误2");
+
         }
 
         //从登录到注册的启动按键
@@ -186,7 +186,6 @@ public class LoginFrame extends JFrame{
                         jumpTimer.start();
 
                     }catch(IOException e1){
-                        System.out.println("无法写入相应文件");
                         signinFrame.getConfirmsuscess().setText("写入文件失败！");
                         TimeForDisplayAndLater.displayAndHideJLabel(signinFrame.getConfirmsuscess(), 500); // 提示写入失败
                     }
@@ -421,7 +420,7 @@ public class LoginFrame extends JFrame{
                     gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
                     GamePersistence.saveGame(gameFrame.getActiveSession());
                 } else {
-                    System.out.println("you are Tourist exit - No save");
+
                 }
                 AudioPlayer.stopAllLoopingSounds();
                 dispose();//close the game window

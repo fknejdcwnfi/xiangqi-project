@@ -31,7 +31,6 @@ public class SignInChecking {
                 }
                 return true;
             } catch (FileNotFoundException e) {
-                System.out.println("未找到相应文件！！！");
                 return false;
             }
 

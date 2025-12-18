@@ -5,7 +5,6 @@ import edu.sustech.xiangqi.model.ChessBoardModel;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class AIAutoWarning {
@@ -325,53 +324,18 @@ public class AIAutoWarning {
                 piecesToMove.add(p);
             }
         }
-        List<Move> potentialMoves = new ArrayList<>();
-        for (AbstractPiece piece : piecesToMove) {
-            for (int row =0; row < model.getRows(); row++) {
-                for (int col =0; col < model.getCols(); col++) {
-                    AbstractPiece target = model.getPieceAt(row, col);
-                    if (!piece.canMoveTo(row, col, model) || (target != null && target.isRed() == isCurrentPlayerRed)) {
-                        continue;
-                    }
 
-                    ChessBoardModel nextModel = model.deepCopy();
-                    AbstractPiece currentPieceInCopy = nextModel.getPieceAt(piece.getRow(), piece.getCol());
-                    AbstractPiece targetPieceInCopy = nextModel.getPieceAt(row, col);
+        List<Move> potentialMoves = generateSortedMoves(model, isCurrentPlayerRed, camp);;
 
-                    if (targetPieceInCopy != null) {
-                        nextModel.remove(targetPieceInCopy);
-                    }
-                    if (currentPieceInCopy != null) {
-                        nextModel.movePieceForce(currentPieceInCopy, row, col);
-                    }
-                    if (nextModel.isInCheck(isCurrentPlayerRed)) {
-                        continue;
-                    }
-
-                    int priorityScore = getMovePriorityScore(model, piece, row, col, camp);
-
-                    potentialMoves.add(new Move(new Point(piece.getRow(), piece.getCol()), new Point(row, col), priorityScore));
-                }
-            }
-        }
-        //对走法进行排序,优先级分数高的走法排在前面
-        potentialMoves.sort(Comparator.comparingInt(move -> move.priorityScore));
-        java.util.Collections.reverse(potentialMoves); // 降序排列
 
         int bestEval = isCurrentPlayerRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
         for (Move move : potentialMoves) {
         // 重新模拟走法（使用排序后的走法信息）
-            ChessBoardModel nextModel = model.deepCopy();
-            AbstractPiece pieceToMove = nextModel.getPieceAt(move.start.y, move.start.x);
-            AbstractPiece target = nextModel.getPieceAt(move.end.y, move.end.x);
+            ChessBoardModel nextModel = simulateMove(model, move);
 
-            if (target != null) {
-                nextModel.remove(target);
-            }
-            if (pieceToMove != null) {
-                nextModel.movePieceForce(pieceToMove, move.end.y, move.end.x);
-            }
+            // 排除导致自杀的走法
+            if (nextModel.isInCheck(isCurrentPlayerRed)) continue;
 
             int eval;
             try {
@@ -528,5 +492,42 @@ public class AIAutoWarning {
         }
 
         return false;
+    }
+
+    //启发式走法生成
+    private static List<Move> generateSortedMoves(ChessBoardModel model, boolean isRed, CurrentCamp camp) {
+        List<Move> moves = new ArrayList<>();
+        for (AbstractPiece piece : model.getPieces()) {
+            if (piece.isRed() != isRed) continue;
+
+            for (int r = 0; r < model.getRows(); r++) {
+                for (int c = 0; c < model.getCols(); c++) {
+                    if (!piece.canMoveTo(r, c, model)) continue;
+
+                    AbstractPiece target = model.getPieceAt(r, c);
+                    if (target != null && target.isRed() == isRed) continue;
+
+                    //静态优先级打分吃子价值越高、攻击子价值越低，优先级越高
+                    int priority = 0;
+                    if (target != null) {
+                        priority = 1000 + (target.getValue() * 10) - piece.getValue();
+                    }
+                    moves.add(new Move(new Point(piece.getCol(), piece.getRow()), new Point(c, r), priority));
+                }
+            }
+        }
+        // 降序排序
+        moves.sort((m1, m2) -> Integer.compare(m2.priorityScore, m1.priorityScore));
+        return moves;
+    }
+
+
+    private static ChessBoardModel simulateMove(ChessBoardModel model, Move move) {
+        ChessBoardModel nextModel = model.deepCopy();
+        AbstractPiece p = nextModel.getPieceAt(move.start.y, move.start.x);
+        AbstractPiece target = nextModel.getPieceAt(move.end.y, move.end.x);
+        if (target != null) nextModel.remove(target);
+        if (p != null) nextModel.movePieceForce(p, move.end.y, move.end.x);
+        return nextModel;
     }
 }

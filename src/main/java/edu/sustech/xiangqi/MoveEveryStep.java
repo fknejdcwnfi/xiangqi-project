@@ -33,13 +33,6 @@ public class MoveEveryStep implements Serializable {
      //target是目标位置的棋子（如果空的话则表示空位一）
  }
 
-
-    public String getMoveDescription() {
-     String camp = isRed ? "红方" : "黑方";
-     String action = capturedPieceName != null ? "吃掉" + capturedPieceName : "移动";
-     return String.format("%s: %s 从 (%d, %d) %s 到 (%d, %d)\n", camp, pieceName, startRow, startCol, action, endRow, endCol);
-    }
-
     public int  getStartRow() {
     return startRow;
 }

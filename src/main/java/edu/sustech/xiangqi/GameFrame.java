@@ -49,7 +49,7 @@ public class GameFrame extends JFrame {
             if (imgUrl != null) {
                 backgroundImage = new ImageIcon(imgUrl).getImage();
             } else {
-                System.out.println("背景图路径错误！");
+
             }
             setLayout(new GridBagLayout()); // Using GridBagLayout to center content
             setPreferredSize(new Dimension(SIDE_PANEL_WIDTH, 0)); // Use the constant
@@ -74,7 +74,7 @@ public class GameFrame extends JFrame {
             if (imgUrl != null) {
                 backgroundImage = new ImageIcon(imgUrl).getImage();
             } else {
-                System.out.println("背景图路径错误！");
+
             }
             setLayout(new GridBagLayout()); // Using GridBagLayout to center content
             setPreferredSize(new Dimension(SIDE_PANEL_WIDTH, 0)); // Use the constant
@@ -104,11 +104,9 @@ public class GameFrame extends JFrame {
         }
         //游客无需初始化金币（coins变量无效）
 
-        // ==================== 1. Session & Logic Init ====================
         initializeSession();
         initializeScores();
 
-        // ==================== 2. Center: Chess Board ====================
         ChessBoardModel model = activeSession.getChessBoardModel();
         CurrentCamp currentCamp = activeSession.getCurrentCamp();
 
@@ -117,20 +115,18 @@ public class GameFrame extends JFrame {
 
         this.add(boardPanel, BorderLayout.CENTER);
 
-        // ==================== 3. Left Panel: Text Info ====================
         JPanel leftPanel = createLeftPanel();
         this.add(leftPanel, BorderLayout.WEST);
 
-        // ==================== 4. Right Panel: Buttons ====================
+
         JPanel rightPanel = createRightPanel();
         this.add(rightPanel, BorderLayout.EAST);
 
         boolean isGameRunning = !Startbutton.isEnabled();
         this.boardPanel.setGameInteractionEnabled(isGameRunning);
 
-        updateScoreLabel();//
-        // ==================== 5. Finalize Window ====================
-        this.pack(); // Adjusts window size based on components
+        updateScoreLabel();
+        this.pack();
         this.setVisible(false);
     }
 

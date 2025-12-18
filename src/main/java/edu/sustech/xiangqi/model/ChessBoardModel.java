@@ -121,7 +121,6 @@ public class ChessBoardModel implements Serializable {
 
     public void recordMove(MoveEveryStep move){
         moveHistory.add(move);
-        System.out.print("Recorded move " + move.getMoveDescription());
     }
 
     public List<MoveEveryStep> getMoveHistory() {
@@ -131,7 +130,6 @@ public class ChessBoardModel implements Serializable {
     public void removeLastMove() {
 
         if (moveHistory.isEmpty()) {
-            System.out.println("Error: Cannot take back a move. Move history is empty.");
             return;
         }
         MoveEveryStep lastMove = moveHistory.remove(moveHistory.size() - 1);
@@ -145,8 +143,6 @@ public class ChessBoardModel implements Serializable {
         AbstractPiece movingPiece = move.getMovingPiece();
 
         if (movingPiece == null) {
-            System.err.println("CRITICAL: Moving piece in history is null. Cannot undo.");
-            // You might consider re-adding the move to history here if you can't undo.
             return;
         }
 
@@ -226,7 +222,6 @@ public class ChessBoardModel implements Serializable {
     public ChessBoardModel deepCopy() {
         ChessBoardModel copy = new ChessBoardModel();
         //复制所有棋子
-
         copy.pieces.clear();//"Ghost" Pieces?
 
         for (AbstractPiece piece : getPieces()) {

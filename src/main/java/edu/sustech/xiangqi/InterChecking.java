@@ -43,7 +43,6 @@ public class InterChecking {
             return -1; //遍历完未找到
 
         } catch (FileNotFoundException e) {
-            System.out.println("找不到该文件");
             return -2;
         }
 
@@ -84,7 +83,6 @@ public class InterChecking {
                 return false; //如果循环结束还没找到对应索引的密码，返回 false
 
             } catch (FileNotFoundException e) {
-                System.out.println("找不到文件！！！");
                 return true;
             }
 

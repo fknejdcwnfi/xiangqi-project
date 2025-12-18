@@ -35,7 +35,7 @@ public class ChessBoardPanel extends JPanel {
 
     private boolean isAIThinking = false;
 
-    //调用那个检测下一步的红圈标记方法。
+    //检测下一步的红圈标记
     private java.util.List<Point> legalMoves = new ArrayList<>();
     private java.util.List<Point> autoMoves = new ArrayList<>();
     private java.util.List<Point> autoEat = new ArrayList<>();
@@ -49,9 +49,8 @@ public class ChessBoardPanel extends JPanel {
 
     public ChessBoardPanel(ChessBoardModel model, CurrentCamp camp, GameFrame gameFrame) {
         this.model = model;
-        this.currentCamp = camp; //initialize with the passed object
+        this.currentCamp = camp;
         this.gameFrame = gameFrame;
-        //设置布局为null随意放置 Label
         this.setLayout(null);
 
         this.idleTimer = new Timer(2500, new ActionListener() {
@@ -183,7 +182,6 @@ public class ChessBoardPanel extends JPanel {
         if (warningWorker != null && !warningWorker.isDone()) {
             warningWorker.cancel(true);
             warningWorker = null;
-            System.out.println("User clicked, warning calculation cancelled.");
         }
 
         if (!useAI) {
@@ -664,11 +662,9 @@ public class ChessBoardPanel extends JPanel {
     }
 
     private void calculateLegalMoves(AbstractPiece piece) {
-        System.out.println("进入calculateLegalMoves方法");
         legalMoves.clear(); // 清空旧位置
 
         if (piece == null) {
-            System.out.println("选中棋子为null，退出");
             return;
         }
         // 遍历棋盘所有位置，检查是否合法
@@ -683,7 +679,6 @@ public class ChessBoardPanel extends JPanel {
                 }
             }
         }
-        System.out.println("合法位置数量：" + legalMoves.size());
     }
 
 
@@ -922,13 +917,11 @@ public class ChessBoardPanel extends JPanel {
 
         // 仅在黑方回合时自动执行
         if (!currentCamp.isRedTurn()) {
-            System.out.println("AI is thinking");
             //Ask AutoWarning for the best PIECE to move
             AbstractPiece bestPiece = AIAutoWarning.warningPiece(model, currentCamp);
 
             lockUIForAI();
             if (!currentCamp.isRedTurn()) {
-                System.out.println("AI is thinking (Background Thread)...");
 
                 //锁定界面（禁止点击棋盘、禁用按钮、设置等待光标）
                 lockUIForAI();
@@ -992,7 +985,6 @@ public class ChessBoardPanel extends JPanel {
                                 repaint();
                             } else {
                                 //AI找不到走法（认输逻辑）
-                                System.out.println("AI 找不到合法走法，触发游戏结束检查。");
                                 handleAIResign();
                             }
 
@@ -1104,8 +1096,6 @@ public class ChessBoardPanel extends JPanel {
             return;
         }
 
-        System.out.println("5 seconds inactivity detected - Starting Background Calc for " + player + "...");
-
         //暂停计时器，避免计算期间重复触发
         if (idleTimer.isRunning()) {
             idleTimer.stop();
@@ -1147,7 +1137,6 @@ public class ChessBoardPanel extends JPanel {
                 try {
                      //检查是否被取消（例如用户点击了棋盘）
                     if (isCancelled()) {
-                        System.out.println("Warning calculation cancelled by user.");
                         return; //被取消了，不需要做任何 UI 更新
                     }
 
@@ -1223,7 +1212,6 @@ public class ChessBoardPanel extends JPanel {
                     gameFrame.updateScoreLabel();
                     repaint();
                 }
-                System.out.println(loser + "被将死，游戏结束。");
                 gameFrame.addCoinsOnWin();
                 this.setGameInteractionEnabled(false);
                 gameFrame.hideGiveUpOption();
@@ -1248,7 +1236,6 @@ public class ChessBoardPanel extends JPanel {
                     gameFrame.addRedCampScore();
                     gameFrame.updateScoreLabel();
                 }
-                System.out.println("困毙，游戏结束。");
                 gameFrame.addCoinsOnWin();
                 this.setGameInteractionEnabled(false);
                 gameFrame.hideGiveUpOption();

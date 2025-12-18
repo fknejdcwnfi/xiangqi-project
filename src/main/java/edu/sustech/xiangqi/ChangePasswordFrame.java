@@ -32,7 +32,7 @@ public class ChangePasswordFrame extends JFrame {
             if (imgUrl != null) {
                 backgroundImage = new ImageIcon(imgUrl).getImage();
             } else {
-                System.out.println("背景图路径错误！");
+
             }
             setLayout(null);
             setPreferredSize(new Dimension(500, 500));

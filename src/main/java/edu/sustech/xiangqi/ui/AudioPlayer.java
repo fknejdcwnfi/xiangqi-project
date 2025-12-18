@@ -23,7 +23,6 @@ public class AudioPlayer {
         }
 
         if (!soundFile.exists()) {
-            System.out.println("错误：音效文件不存在 → " + soundFile.getAbsolutePath());
             return;
         }
 
@@ -35,31 +34,24 @@ public class AudioPlayer {
                 DataLine.Info info = new DataLine.Info(Clip.class, format);
                 Clip clip = (Clip) AudioSystem.getLine(info);
                 clip.open(audioStream);
-                System.out.println("开始播放音效"); //确认播放开始
                 clip.start();
 
                 clip.addLineListener(event -> {
                     if (event.getType() == LineEvent.Type.STOP) {
-                        System.out.println("音效播放完毕"); //确认播放结束
                         clip.close();
                         try {
                             audioStream.close();
                         } catch (IOException e) {
-                            System.out.println("无相关文件");
                         }
                     }
                 });
             } catch (UnsupportedAudioFileException e) {
-                System.out.println("错误：音频格式不支持 → " + e.getMessage());
                 e.printStackTrace();
             } catch (IOException e) {
-                System.out.println("错误：读取文件失败 → " + e.getMessage());
                 e.printStackTrace();
             } catch (LineUnavailableException e) {
-                System.out.println("错误：音频设备不可用 → " + e.getMessage());
                 e.printStackTrace();
             } catch (Exception e) {
-                System.out.println("未知错误：" + e.getMessage());
                 e.printStackTrace();
             }
         }).start();
@@ -76,7 +68,6 @@ public class AudioPlayer {
             try {
                 File soundFile = new File(soundPath);
                 if (!soundFile.exists()) {
-                    System.out.println("音效文件不存在：" + soundPath);
                     return;
                 }
 
