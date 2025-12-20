@@ -250,10 +250,11 @@ public class LoginFrame extends JFrame{
 
     //把所有相应器都放到这里了
     private void setupGameFrameListeners() {
-        // =====================================================================
         //重新开始的响应器
         gameFrame.getRestartButton().addActionListener(e -> {
             AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
+            gameFrame.setIsGivingUp(false);
+            gameFrame.setIsPeace(false);
             PlayGameSession newActiveSession = new PlayGameSession(gameFrame.getActiveSession().getPlayerNameID());//全新棋盘和红棋子先走
             gameFrame.setActiveSessionModel(newActiveSession);
             gameFrame.setCurrentCamp(newActiveSession.getCurrentCamp());
@@ -393,9 +394,9 @@ public class LoginFrame extends JFrame{
         gameFrame.getStartButton().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AudioPlayer.playSound("src/main/resources/Audio/按键音效.wav");
-                //启用棋盘交互
+                gameFrame.setIsGivingUp(false);
+                gameFrame.setIsPeace(false);
                 gameFrame.getBoardPanel().setGameInteractionEnabled(true);
-                //禁用“点击开始”按钮，防止重复点击，同时提示用户已开始
                 gameFrame.getStartButton().setEnabled(false);
                 AudioPlayer.playSound("src/main/resources/Audio/游戏开始.wav");
                 if (!gameFrame.getRestartButton().isEnabled()) {
@@ -418,6 +419,8 @@ public class LoginFrame extends JFrame{
                     gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
                     gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
                     gameFrame.getActiveSession().setBlackCampScore(gameFrame.getBlackCampScore());
+                    gameFrame.setIsGivingUp(gameFrame.getActiveSession().getIsGivingUp());
+                    gameFrame.setIsPeace(gameFrame.getActiveSession().getIsPeace());
                     GamePersistence.saveGame(gameFrame.getActiveSession());
                 } else {
 
@@ -446,10 +449,15 @@ public class LoginFrame extends JFrame{
                 }
                 gameFrame.updateScoreLabel();
                 gameFrame.updateStatusMessage(winner + "胜利！（" + loser + "认输）", Color.BLUE, true);
-                gameFrame.hideGiveUpOption();
                 gameFrame.getEndUpPeaceButton().setEnabled(false);
+                gameFrame.hideGiveUpOption();
+                gameFrame.getTakeBackAMove().setEnabled(false);
                 gameFrame.getBoardPanel().setGameInteractionEnabled(false);
                 gameFrame.stopGameTimer();
+                gameFrame.getActiveSession().setPeace(false);
+                gameFrame.getActiveSession().setGivingUp(true);
+                gameFrame.setIsGivingUp(gameFrame.getActiveSession().getIsGivingUp());
+                gameFrame.setIsPeace(gameFrame.getActiveSession().getIsPeace());
                 gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
                 gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
                 gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());
@@ -479,6 +487,10 @@ public class LoginFrame extends JFrame{
                     gameFrame.updateScoreLabel();
                     gameFrame.getEndUpPeaceButton().setEnabled(false);
                     gameFrame.getTakeBackAMove().setEnabled(false);
+                    gameFrame.getActiveSession().setPeace(true);
+                    gameFrame.getActiveSession().setGivingUp(false);
+                    gameFrame.setIsGivingUp(gameFrame.getActiveSession().getIsGivingUp());
+                    gameFrame.setIsPeace(gameFrame.getActiveSession().getIsPeace());
                     gameFrame.getActiveSession().setPlayingTime(gameFrame.getTimerLabel());
                     gameFrame.getActiveSession().setSecondsElapsed(gameFrame.getSecondsElapsed());
                     gameFrame.getActiveSession().setRedCampScore(gameFrame.getRedCampScore());

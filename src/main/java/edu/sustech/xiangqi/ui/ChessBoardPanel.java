@@ -53,7 +53,7 @@ public class ChessBoardPanel extends JPanel {
         this.gameFrame = gameFrame;
         this.setLayout(null);
 
-        this.idleTimer = new Timer(2500, new ActionListener() {
+        this.idleTimer = new Timer(5000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 triggerAutoWarning();
@@ -83,6 +83,34 @@ public class ChessBoardPanel extends JPanel {
         boolean isRed = currentCamp.isRedTurn();
         boolean inCheck = model.isInCheck(isRed);
         boolean hasLegalMoves = model.hasLegalMoves(isRed);
+
+        boolean isGivingUp = gameFrame.getIsGivingUp();
+        boolean isPeace = gameFrame.getIsPeace();
+
+        //todo current camp and the title and the save
+        if (isGivingUp && !isPeace) {
+            gameFrame.updateStatusMessage("投降状态", Color.BLUE, true);
+            gameFrame.hideGiveUpOption();
+            gameFrame.getBoardPanel().setGameInteractionEnabled(false);
+            gameFrame.stopGameTimer();
+            gameFrame.getBoardPanel().getIdleTimer().stop();
+            gameFrame.updateScoreLabel();
+            gameFrame.getEndUpPeaceButton().setEnabled(false);
+            gameFrame.getTakeBackAMove().setEnabled(false);
+            return;
+        }
+
+        if (isPeace && !isGivingUp) {
+            gameFrame.updateStatusMessage("双方和棋！", Color.BLUE, true);
+            gameFrame.hideGiveUpOption();
+            gameFrame.getBoardPanel().setGameInteractionEnabled(false);
+            gameFrame.stopGameTimer();
+            gameFrame.getBoardPanel().getIdleTimer().stop();
+            gameFrame.updateScoreLabel();
+            gameFrame.getEndUpPeaceButton().setEnabled(false);
+            gameFrame.getTakeBackAMove().setEnabled(false);
+            return;
+        }
 
         if (currentCamp.isRedTurn()) {
             if (hasLegalMoves) {
@@ -351,6 +379,7 @@ public class ChessBoardPanel extends JPanel {
                 legalMoves.clear();
                 selectedPiece = null;
                 gameFrame.refreshLastMoveVisuals();
+
                 checkAndHandleGameOver(currentCamp, model); //检查黑方是否将死/困毙
 
                 if (!this.interactionEnabled) {
@@ -1193,6 +1222,7 @@ public class ChessBoardPanel extends JPanel {
     public Timer getIdleTimer() {
         return idleTimer;
     }
+
     private void checkAndHandleGameOver(CurrentCamp camp, ChessBoardModel model) {
         boolean hasLegalMoves = model.hasLegalMoves(camp.isRedTurn());
         if (!hasLegalMoves) {
@@ -1200,7 +1230,7 @@ public class ChessBoardPanel extends JPanel {
                 String winner = camp.isRedTurn() ? "黑方" : "红方";
                 String loser = camp.isRedTurn() ? "红方" : "黑方";
                 String message = loser + " 被将死！" + winner + "胜利！";
-
+                AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
                 gameFrame.updateStatusMessage(message, Color.BLUE, true);
                 this.setGameInteractionEnabled(false); //禁用交互
                 if (currentCamp.isRedTurn()) {
@@ -1227,6 +1257,7 @@ public class ChessBoardPanel extends JPanel {
             }
             else {
                 String message = "困毙！！";
+                AudioPlayer.playSound("src/main/resources/Audio/绝杀.wav");
                 gameFrame.updateStatusMessage(message, Color.BLUE, true);
                 this.setGameInteractionEnabled(false); //禁用交互
                 if (currentCamp.isRedTurn()) {

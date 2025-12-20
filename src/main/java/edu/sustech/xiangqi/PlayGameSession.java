@@ -13,6 +13,8 @@ public class PlayGameSession implements Serializable{
     private int redCampScore;
     private int blackCampScore;
     private int coins = 5;
+    private boolean isGivingUp;
+    private boolean isPeace;
 
     public PlayGameSession(String playerName) {
            this.PlayerNameID = playerName;
@@ -73,5 +75,17 @@ public class PlayGameSession implements Serializable{
     }
     public void setCoins(int coins) {
         this.coins = coins;
+    }
+    public boolean getIsGivingUp() {
+        return isGivingUp;
+    }
+    public void setGivingUp(boolean givingUp) {
+        isGivingUp = givingUp;
+    }
+    public boolean getIsPeace() {
+        return isPeace;
+    }
+    public void setPeace(boolean peace) {
+        isPeace = peace;
     }
 }

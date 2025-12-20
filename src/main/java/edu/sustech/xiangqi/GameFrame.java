@@ -32,6 +32,8 @@ public class GameFrame extends JFrame {
     private JLabel coinsLabel;
 
     private boolean isTourist;
+    private boolean isGivingUp;
+    private boolean isPeace;
     private String playerName;
     private int redCampScore;
     private int blackCampScore;
@@ -98,12 +100,11 @@ public class GameFrame extends JFrame {
         this.setLocationRelativeTo(null);
         this.setLayout(new BorderLayout()); // Main Layout
 
-        //初始化金币：仅登录用户有金币，游客不初始化
         if (!isTourist) {
             this.coins = activeSession != null ? activeSession.getCoins() : 5; // 登录用户默认5金币
+            this.isPeace = activeSession != null ? activeSession.getIsPeace() : false;
+            this.isGivingUp = activeSession != null ? activeSession.getIsGivingUp() : false;
         }
-        //游客无需初始化金币（coins变量无效）
-
         initializeSession();
         initializeScores();
 
@@ -122,8 +123,24 @@ public class GameFrame extends JFrame {
         JPanel rightPanel = createRightPanel();
         this.add(rightPanel, BorderLayout.EAST);
 
-        boolean isGameRunning = !Startbutton.isEnabled();
+        boolean isGameRunning = !Startbutton.isEnabled() && !isGivingUp && !isPeace;
         this.boardPanel.setGameInteractionEnabled(isGameRunning);
+
+        if (isGivingUp || isPeace) {
+            if(endUpPeaceButton != null) endUpPeaceButton.setEnabled(false);
+            if(giveUpButton != null) giveUpButton.setEnabled(false);
+            takeBackAMove.setEnabled(false);
+            if(restartButton != null) {
+                restartButton.setEnabled(true);
+                restartButton.setVisible(true);
+            }
+        }
+
+        if (isPeace) {
+            updateStatusMessage("双方和棋",Color.BLUE,true);
+        } else if (isGivingUp) {
+          updateStatusMessage("投降状态", Color.BLUE,true);
+        }
 
         updateScoreLabel();
         this.pack();
@@ -152,10 +169,14 @@ public class GameFrame extends JFrame {
         if (isTourist) {
             this.redCampScore = 0;
             this.blackCampScore = 0;
+            this.isGivingUp = false;
+            this.isPeace = false;
         } else {
             this.redCampScore = activeSession.getRedCampScore();
             this.blackCampScore = activeSession.getBlackCampScore();
             this.coins =  activeSession.getCoins();
+            this.isGivingUp = activeSession.getIsGivingUp();
+            this.isPeace = activeSession.getIsPeace();
         }
 
         String playingTime = activeSession.getPlayingTime();
@@ -308,7 +329,13 @@ public class GameFrame extends JFrame {
     public PlayGameSession getActiveSession() { return this.activeSession; }
 
     public void setActiveSessionModel(PlayGameSession newActiveSession) {
+        this.activeSession.setModel(newActiveSession.getChessBoardModel());
         getActiveSession().setModel(newActiveSession.getChessBoardModel());
+        this.activeSession.setCurrentCamp(newActiveSession.getCurrentCamp());
+        this.activeSession.setGivingUp(false);
+        this.activeSession.setPeace(false);
+        this.isGivingUp = false;
+        this.isPeace = false;
     }
 
     public void setCurrentCamp(CurrentCamp newCurrentCamp) {
@@ -323,6 +350,7 @@ public class GameFrame extends JFrame {
     public void showGiveUpOption(String campName) {
         giveUpButton.setText(campName + "认输?");
         giveUpButton.setVisible(true);
+        giveUpButton.setEnabled(true);
     }
 
     public void hideGiveUpOption() {
@@ -364,6 +392,14 @@ public class GameFrame extends JFrame {
     public int getSecondsElapsed() { return secondsElapsed; }
     public String getTimerLabel() { return this.timerLabel.getText(); }
     public int getCoins(){return coins;}
+    public boolean getIsGivingUp() { return this.isGivingUp; }
+    public boolean getIsPeace() { return this.isPeace; }
+    public void setIsGivingUp(boolean isGivingUp) {
+        this.isGivingUp = isGivingUp;
+    }
+    public void setIsPeace(boolean isPeace) {
+        this.isPeace = isPeace;
+    }
 
     public int getRedCampScore() { return redCampScore; }
     public void addRedCampScore() { this.redCampScore++; }

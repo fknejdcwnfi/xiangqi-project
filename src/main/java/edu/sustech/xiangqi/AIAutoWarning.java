@@ -331,7 +331,7 @@ public class AIAutoWarning {
         int bestEval = isCurrentPlayerRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
         for (Move move : potentialMoves) {
-        // 重新模拟走法（使用排序后的走法信息）
+        //重新模拟走法（使用排序后的走法信息）
             ChessBoardModel nextModel = simulateMove(model, move);
 
             // 排除导致自杀的走法
