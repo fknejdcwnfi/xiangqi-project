@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 
 public class TimeForDisplayAndLater {
 
-    ///////////////////////////////////////////////////////时间延迟通用代码的方法
     //字段的设置延迟时间（先展示后消失）
     public static void displayAndHideJLabel(JLabel label, int durationMs) {
         //立即显示 Label

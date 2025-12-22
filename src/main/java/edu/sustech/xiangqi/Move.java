@@ -5,7 +5,7 @@ import java.awt.*;
 public class Move {
     Point start;
     Point end;
-    int priorityScore; // 用于排序的优先级分数
+    int priorityScore;
 
     public Move(Point start, Point end, int priorityScore) {
         this.start = start;

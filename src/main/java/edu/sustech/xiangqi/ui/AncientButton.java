@@ -4,18 +4,18 @@ import javax.swing.*;
 import java.awt.*;
 
 public class AncientButton extends JButton {
-    //
+
     private Color bgColor = new Color(245, 222, 179); //浅棕背景
     private Color borderColor = new Color(139, 69, 19); //深棕边框
     private int borderRadius = 15; //圆角大小
 
-    // 构造方法
+    //构造方法
     public AncientButton(String text) {
         super(text);
         initStyle();
     }
 
-    // 重载构造方法（支持自定义背景色）
+    //重载构造方法（支持自定义背景色）
     public AncientButton(String text, Color bgColor) {
         super(text);
         this.bgColor = bgColor;
@@ -33,7 +33,7 @@ public class AncientButton extends JButton {
         this.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
-    // 重写绘制逻辑（封装所有美化效果）
+    //重写绘制逻辑（封装所有美化效果）
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();

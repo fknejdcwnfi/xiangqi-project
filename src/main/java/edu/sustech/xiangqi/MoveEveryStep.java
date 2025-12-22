@@ -1,7 +1,7 @@
 package edu.sustech.xiangqi;
 
 import edu.sustech.xiangqi.model.AbstractPiece;
-import java.io.Serializable; // <--- IMPORANT: Must add this
+import java.io.Serializable;
 
 public class MoveEveryStep implements Serializable {
     private static final long serialVersionUID = 1L;
